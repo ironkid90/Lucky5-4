@@ -8,6 +8,13 @@ using Microsoft.AspNetCore.SignalR;
 
 public sealed class CarrePokerGameHub(IGameService gameService, ConnectionRegistry registry) : Hub
 {
+    private const string MachineStateUpdatedEvent = "MachineStateUpdated";
+    private const string CardsDealtEvent = "CardsDealt";
+    private const string CardRevealedEvent = "CardRevealed";
+    private const string WalletUpdatedEvent = "WalletUpdated";
+    private const string ErrorEvent = "Error";
+    private const string CurrentMachineContextKey = "machine-id";
+
     public override Task OnConnectedAsync()
     {
         if (TryGetUserId(out var userId))
@@ -21,49 +28,114 @@ public sealed class CarrePokerGameHub(IGameService gameService, ConnectionRegist
     public override Task OnDisconnectedAsync(Exception? exception)
     {
         registry.Remove(Context.ConnectionId);
+        Context.Items.Remove(CurrentMachineContextKey);
         return base.OnDisconnectedAsync(exception);
     }
 
     public async Task JoinMachine(int machineId)
     {
+        if (machineId <= 0)
+        {
+            await EmitErrorAsync("INVALID_MACHINE", "Machine id must be positive.");
+            throw new HubException("Machine id must be positive.");
+        }
+
+        if (TryGetCurrentMachineId(out var previousMachineId) && previousMachineId != machineId)
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, GroupName(previousMachineId));
+        }
+
+        Context.Items[CurrentMachineContextKey] = machineId;
         await Groups.AddToGroupAsync(Context.ConnectionId, GroupName(machineId));
-        var state = await gameService.GetMachineStateAsync(machineId, Context.ConnectionAborted);
-        await Clients.Caller.SendAsync("MachineStateUpdated", state, Context.ConnectionAborted);
+        await BroadcastMachineStateAsync(machineId, Clients.Caller, Context.ConnectionAborted);
     }
 
-    public Task LeaveMachine(int machineId)
+    public async Task LeaveMachine(int machineId)
     {
-        return Groups.RemoveFromGroupAsync(Context.ConnectionId, GroupName(machineId));
+        if (machineId <= 0)
+        {
+            return;
+        }
+
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, GroupName(machineId));
+
+        if (TryGetCurrentMachineId(out var currentMachineId) && currentMachineId == machineId)
+        {
+            Context.Items.Remove(CurrentMachineContextKey);
+        }
     }
 
     public async Task Deal(int machineId, decimal betAmount)
     {
         if (!TryGetUserId(out var userId))
         {
+            await EmitErrorAsync("UNAUTHORIZED", "Unauthorized");
             throw new HubException("Unauthorized");
         }
 
-        var result = await gameService.DealAsync(userId, new DealRequest(machineId, betAmount), Context.ConnectionAborted);
-        await Clients.Caller.SendAsync("CardsDealt", result, Context.ConnectionAborted);
-        await Clients.Group(GroupName(machineId)).SendAsync("MachineStateUpdated", await gameService.GetMachineStateAsync(machineId, Context.ConnectionAborted), Context.ConnectionAborted);
+        if (machineId <= 0)
+        {
+            await EmitErrorAsync("INVALID_MACHINE", "Machine id must be positive.");
+            throw new HubException("Machine id must be positive.");
+        }
+
+        if (betAmount <= 0)
+        {
+            await EmitErrorAsync("INVALID_BET", "Bet amount must be positive.");
+            throw new HubException("Bet amount must be positive.");
+        }
+
+        Context.Items[CurrentMachineContextKey] = machineId;
+
+        var result = await gameService.DealAsync(
+            userId,
+            new DealRequest(machineId, betAmount),
+            Context.ConnectionAborted);
+
+        await Clients.Caller.SendAsync(CardsDealtEvent, result, Context.ConnectionAborted);
+        await BroadcastMachineStateAsync(machineId, Clients.Group(GroupName(machineId)), Context.ConnectionAborted);
     }
 
     public async Task Draw(Guid roundId, int[] holdIndexes)
     {
         if (!TryGetUserId(out var userId))
         {
+            await EmitErrorAsync("UNAUTHORIZED", "Unauthorized");
             throw new HubException("Unauthorized");
         }
 
-        var result = await gameService.DrawAsync(userId, new DrawRequest(roundId, holdIndexes), Context.ConnectionAborted);
-        await Clients.Caller.SendAsync("CardRevealed", result, Context.ConnectionAborted);
-        await Clients.Caller.SendAsync("WalletUpdated", new { result.RoundId, result.WalletBalanceAfterRound }, Context.ConnectionAborted);
+        var normalizedHoldIndexes = (holdIndexes ?? [])
+            .Where(index => index >= 0 && index < 5)
+            .Distinct()
+            .OrderBy(index => index)
+            .ToArray();
+
+        var result = await gameService.DrawAsync(
+            userId,
+            new DrawRequest(roundId, normalizedHoldIndexes),
+            Context.ConnectionAborted);
+
+        await Clients.Caller.SendAsync(CardRevealedEvent, result, Context.ConnectionAborted);
+        await Clients.Caller.SendAsync(
+            WalletUpdatedEvent,
+            new
+            {
+                result.RoundId,
+                result.WalletBalanceAfterRound
+            },
+            Context.ConnectionAborted);
+
+        if (TryGetCurrentMachineId(out var machineId))
+        {
+            await BroadcastMachineStateAsync(machineId, Clients.Group(GroupName(machineId)), Context.ConnectionAborted);
+        }
     }
 
     public async Task DoubleUp(Guid roundId, string guess)
     {
         if (!TryGetUserId(out var userId))
         {
+            await EmitErrorAsync("UNAUTHORIZED", "Unauthorized");
             throw new HubException("Unauthorized");
         }
 
@@ -80,9 +152,36 @@ public sealed class CarrePokerGameHub(IGameService gameService, ConnectionRegist
 
     public async Task ReconnectSync(int machineId)
     {
+        Context.Items[CurrentMachineContextKey] = machineId;
         registry.Touch(Context.ConnectionId);
-        var state = await gameService.GetMachineStateAsync(machineId, Context.ConnectionAborted);
-        await Clients.Caller.SendAsync("MachineStateUpdated", state, Context.ConnectionAborted);
+        await BroadcastMachineStateAsync(machineId, Clients.Caller, Context.ConnectionAborted);
+    }
+
+    private async Task BroadcastMachineStateAsync(int machineId, IClientProxy target, CancellationToken cancellationToken)
+    {
+        var state = await gameService.GetMachineStateAsync(machineId, cancellationToken);
+        await target.SendAsync(MachineStateUpdatedEvent, state, cancellationToken);
+    }
+
+    private Task EmitErrorAsync(string code, string message)
+        => Clients.Caller.SendAsync(ErrorEvent, new { code, message }, Context.ConnectionAborted);
+
+    private bool TryGetCurrentMachineId(out int machineId)
+    {
+        machineId = 0;
+
+        if (!Context.Items.TryGetValue(CurrentMachineContextKey, out var value) || value is null)
+        {
+            return false;
+        }
+
+        return value switch
+        {
+            int intValue => (machineId = intValue) > 0,
+            long longValue => (machineId = checked((int)longValue)) > 0,
+            string stringValue when int.TryParse(stringValue, out var parsed) => (machineId = parsed) > 0,
+            _ => false
+        };
     }
 
     private bool TryGetUserId(out Guid userId)
