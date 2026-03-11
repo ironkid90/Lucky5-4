@@ -1,0 +1,72 @@
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.vs/
+*.suo
+*.user
+*.rsuser
+
+# Local workspace state
+.local/
+tmp/
+attached_assets/
+${SQLITE_DB_PATH}
+CLAUDE.md
+.replit
+replit.md
+copilot-instructions.md
+
+# Local reverse-engineering captures and tool drops
+*.7z
+*.apk
+*.pcap
+PCAPdroid_*.txt
+*.mp4
+apktool_*.jar
+apktool.bat
+analysis/apktool/
+analysis/jadx/
+analysis/tools/
+cloudfunction-*.ipynb
+firebase-debug.log
+mitm.md
+Inspect TLS encrypted traffic using mitmproxy and wireshark.md
+
+# .NET
+**/bin/
+**/obj/
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+pubspec.lock
+
+# Node / frontend
+node_modules/
+.pnpm-store/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Logs / local runtime files
+*.log
+*.db
+*.db-shm
+*.db-wal
+
+# Local env overrides
+.env
+*.env.local
+*.env.*.local

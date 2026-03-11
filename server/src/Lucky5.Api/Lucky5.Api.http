@@ -1,0 +1,4 @@
+@Lucky5.Api_HostAddress = http://localhost:5051
+
+GET {{Lucky5.Api_HostAddress}}/health/live
+Accept: application/json

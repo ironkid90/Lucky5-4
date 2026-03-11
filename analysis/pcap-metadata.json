@@ -1,0 +1,669 @@
+[
+  {
+    "file": "PCAPdroid_09_Mar_23_04_50.pcap",
+    "linktype": 101,
+    "snaplen": 32768,
+    "packets": 281964,
+    "duration_seconds": 270.21068,
+    "tls_client_hellos": 0,
+    "sni_hosts": {},
+    "top_flows": [
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 52170,
+        "dst_ip": "172.67.207.154",
+        "dst_port": 443,
+        "packets": 16,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "172.67.207.154",
+        "src_port": 443,
+        "dst_ip": "10.215.173.1",
+        "dst_port": 52170,
+        "packets": 16,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 58864,
+        "dst_ip": "172.67.207.154",
+        "dst_port": 443,
+        "packets": 13,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "172.67.207.154",
+        "src_port": 443,
+        "dst_ip": "10.215.173.1",
+        "dst_port": 58864,
+        "packets": 13,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 60444,
+        "dst_ip": "172.67.207.154",
+        "dst_port": 443,
+        "packets": 13,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "172.67.207.154",
+        "src_port": 443,
+        "dst_ip": "10.215.173.1",
+        "dst_port": 60444,
+        "packets": 13,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 49532,
+        "dst_ip": "172.67.207.154",
+        "dst_port": 443,
+        "packets": 13,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "172.67.207.154",
+        "src_port": 443,
+        "dst_ip": "10.215.173.1",
+        "dst_port": 49532,
+        "packets": 13,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 50976,
+        "dst_ip": "172.67.207.154",
+        "dst_port": 443,
+        "packets": 13,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "172.67.207.154",
+        "src_port": 443,
+        "dst_ip": "10.215.173.1",
+        "dst_port": 50976,
+        "packets": 13,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 55518,
+        "dst_ip": "104.21.93.81",
+        "dst_port": 443,
+        "packets": 13,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "104.21.93.81",
+        "src_port": 443,
+        "dst_ip": "10.215.173.1",
+        "dst_port": 55518,
+        "packets": 13,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 37166,
+        "dst_ip": "104.21.93.81",
+        "dst_port": 443,
+        "packets": 13,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "104.21.93.81",
+        "src_port": 443,
+        "dst_ip": "10.215.173.1",
+        "dst_port": 37166,
+        "packets": 13,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 50040,
+        "dst_ip": "172.67.207.154",
+        "dst_port": 443,
+        "packets": 12,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "172.67.207.154",
+        "src_port": 443,
+        "dst_ip": "10.215.173.1",
+        "dst_port": 50040,
+        "packets": 12,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 51142,
+        "dst_ip": "172.67.207.154",
+        "dst_port": 443,
+        "packets": 12,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "172.67.207.154",
+        "src_port": 443,
+        "dst_ip": "10.215.173.1",
+        "dst_port": 51142,
+        "packets": 12,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 59580,
+        "dst_ip": "104.21.93.81",
+        "dst_port": 443,
+        "packets": 12,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 59848,
+        "dst_ip": "104.21.93.81",
+        "dst_port": 443,
+        "packets": 12,
+        "bytes": 0
+      }
+    ]
+  },
+  {
+    "file": "PCAPdroid_09_Mar_23_10_43.pcap",
+    "linktype": 101,
+    "snaplen": 32768,
+    "packets": 14967,
+    "duration_seconds": 24.246128,
+    "tls_client_hellos": 0,
+    "sni_hosts": {},
+    "top_flows": [
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 36746,
+        "dst_ip": "172.67.207.154",
+        "dst_port": 443,
+        "packets": 2,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 42746,
+        "dst_ip": "104.21.93.81",
+        "dst_port": 443,
+        "packets": 2,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 36778,
+        "dst_ip": "172.67.207.154",
+        "dst_port": 443,
+        "packets": 2,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 36794,
+        "dst_ip": "172.67.207.154",
+        "dst_port": 443,
+        "packets": 2,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 36842,
+        "dst_ip": "172.67.207.154",
+        "dst_port": 443,
+        "packets": 2,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 36850,
+        "dst_ip": "172.67.207.154",
+        "dst_port": 443,
+        "packets": 2,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 42850,
+        "dst_ip": "104.21.93.81",
+        "dst_port": 443,
+        "packets": 2,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 36866,
+        "dst_ip": "172.67.207.154",
+        "dst_port": 443,
+        "packets": 2,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 42874,
+        "dst_ip": "104.21.93.81",
+        "dst_port": 443,
+        "packets": 2,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 42882,
+        "dst_ip": "104.21.93.81",
+        "dst_port": 443,
+        "packets": 2,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 42890,
+        "dst_ip": "104.21.93.81",
+        "dst_port": 443,
+        "packets": 2,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 36898,
+        "dst_ip": "172.67.207.154",
+        "dst_port": 443,
+        "packets": 2,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 42906,
+        "dst_ip": "104.21.93.81",
+        "dst_port": 443,
+        "packets": 2,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 42922,
+        "dst_ip": "104.21.93.81",
+        "dst_port": 443,
+        "packets": 2,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 36930,
+        "dst_ip": "172.67.207.154",
+        "dst_port": 443,
+        "packets": 2,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 36946,
+        "dst_ip": "172.67.207.154",
+        "dst_port": 443,
+        "packets": 2,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 42954,
+        "dst_ip": "104.21.93.81",
+        "dst_port": 443,
+        "packets": 2,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 36962,
+        "dst_ip": "172.67.207.154",
+        "dst_port": 443,
+        "packets": 2,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 42986,
+        "dst_ip": "104.21.93.81",
+        "dst_port": 443,
+        "packets": 2,
+        "bytes": 0
+      },
+      {
+        "transport": "tcp",
+        "src_ip": "10.215.173.1",
+        "src_port": 36994,
+        "dst_ip": "172.67.207.154",
+        "dst_port": 443,
+        "packets": 2,
+        "bytes": 0
+      }
+    ]
+  },
+  {
+    "file": "PCAPdroid_09_Mar_23_13_21.pcap",
+    "linktype": 1,
+    "snaplen": 32768,
+    "packets": 2,
+    "duration_seconds": 0.005584,
+    "tls_client_hellos": 0,
+    "sni_hosts": {},
+    "top_flows": [
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 27253,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 1,
+        "bytes": 66
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 31462,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 1,
+        "bytes": 66
+      }
+    ]
+  },
+  {
+    "file": "PCAPdroid_09_Mar_23_20_53.pcap",
+    "linktype": 1,
+    "snaplen": 32768,
+    "packets": 16,
+    "duration_seconds": 25.045912,
+    "tls_client_hellos": 0,
+    "sni_hosts": {},
+    "top_flows": [
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 63395,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 2,
+        "bytes": 132
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 41652,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 2,
+        "bytes": 132
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 45730,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 2,
+        "bytes": 132
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 64804,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 2,
+        "bytes": 132
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 65161,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 2,
+        "bytes": 132
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 50048,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 2,
+        "bytes": 132
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 56465,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 2,
+        "bytes": 132
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 61663,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 2,
+        "bytes": 132
+      }
+    ]
+  },
+  {
+    "file": "PCAPdroid_09_Mar_23_23_59.pcap",
+    "linktype": 1,
+    "snaplen": 32768,
+    "packets": 31,
+    "duration_seconds": 30.037922,
+    "tls_client_hellos": 0,
+    "sni_hosts": {},
+    "top_flows": [
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 13396,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 2,
+        "bytes": 132
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 1806,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 2,
+        "bytes": 132
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 11365,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 2,
+        "bytes": 132
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 17380,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 2,
+        "bytes": 132
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 20889,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 2,
+        "bytes": 132
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 19408,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 2,
+        "bytes": 132
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 20879,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 2,
+        "bytes": 132
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 8757,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 2,
+        "bytes": 132
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 8394,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 2,
+        "bytes": 132
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 2645,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 2,
+        "bytes": 132
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 11956,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 2,
+        "bytes": 132
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 7603,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 2,
+        "bytes": 132
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 20220,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 2,
+        "bytes": 132
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.0.2.15",
+        "src_port": 27674,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 1,
+        "bytes": 66
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 21090,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 1,
+        "bytes": 66
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 27454,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 1,
+        "bytes": 66
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 13574,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 1,
+        "bytes": 66
+      },
+      {
+        "transport": "udp",
+        "src_ip": "10.215.173.1",
+        "src_port": 30742,
+        "dst_ip": "10.215.173.2",
+        "dst_port": 53,
+        "packets": 1,
+        "bytes": 66
+      }
+    ]
+  }
+]

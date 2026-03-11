@@ -1,0 +1,841 @@
+openapi: 3.1.0
+info:
+  title: Lucky5 Clean-Room API
+  version: 1.0.0
+  description: >
+    Contract-first clean-room API for Lucky5 bankroll poker (local/staging phase).
+servers:
+  - url: http://localhost:5051
+    description: Local API
+tags:
+  - name: Auth
+  - name: Game
+  - name: General
+security:
+  - bearerAuth: []
+paths:
+  /api/Auth/login:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Login with username/password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseOfLoginPayload'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/Auth/signup:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Create account and issue OTP challenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseOfMemberProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/Auth/verify-otp:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Verify OTP challenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyOtpRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/ApiResponseSuccessFlag'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/Auth/resend-otp:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Resend OTP challenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResendOtpRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/ApiResponseSuccessFlag'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/Auth/GetUserById:
+    get:
+      tags: [Auth]
+      summary: Get profile for current authenticated user
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseOfMemberProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/Auth/MemberHistory:
+    get:
+      tags: [Auth]
+      summary: Get wallet history
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseOfWalletLedgerEntryArray'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/Auth/TransferBalance:
+    post:
+      tags: [Auth]
+      summary: Transfer balance operation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseOfWalletLedgerEntry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/Auth/MoveWinToBalance:
+    post:
+      tags: [Auth]
+      summary: Move winnings to wallet balance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseOfWalletLedgerEntry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/Auth/UpdateCredit:
+    post:
+      tags: [Auth]
+      summary: Adjust account credit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseOfWalletLedgerEntry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/Auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoke access token
+      responses:
+        '200':
+          $ref: '#/components/responses/ApiResponseSuccessFlag'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/Game/games:
+    get:
+      tags: [Game]
+      summary: List game families
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseOfStringArray'
+  /api/Game/games/machines:
+    get:
+      tags: [Game]
+      summary: List machine offerings
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseOfMachineListingArray'
+  /api/Game/defaultRules:
+    get:
+      tags: [Game]
+      summary: Get payout/default rules
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseOfDefaultRules'
+  /api/Game/offer:
+    get:
+      tags: [Game]
+      summary: Get active offers
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseOfOfferArray'
+  /api/Game/cards/deal:
+    post:
+      tags: [Game]
+      summary: Start round and deal opening hand
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DealRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseOfDealResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/Game/cards/draw:
+    post:
+      tags: [Game]
+      summary: Resolve held/drawn cards for current round
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DrawRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseOfDrawResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/Game/double-up:
+    post:
+      tags: [Game]
+      summary: Resolve double-up command
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DoubleUpRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseOfRewardStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/General/app-settings:
+    get:
+      tags: [General]
+      security: []
+      summary: Get app settings dictionary
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseOfStringMap'
+  /api/General/contact-info:
+    get:
+      tags: [General]
+      security: []
+      summary: Get support contact information
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseOfStringMap'
+  /api/General/contact-types:
+    get:
+      tags: [General]
+      security: []
+      summary: Get support contact categories
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseOfContactTypeArray'
+  /api/General/contact-report:
+    post:
+      tags: [General]
+      summary: Submit support report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactReportRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/ApiResponseSuccessFlag'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/General/terms:
+    get:
+      tags: [General]
+      security: []
+      summary: Get latest terms document
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseOfTermsResponse'
+
+  /CarrePokerGameHub/negotiate:
+    post:
+      tags: [Game]
+      summary: SignalR negotiate endpoint
+      description: Provided by ASP.NET SignalR middleware.
+      requestBody:
+        required: false
+      responses:
+        '200':
+          description: Negotiate success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NegotiateResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    BadRequest:
+      description: Validation or command failure
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponseOfAny'
+    Unauthorized:
+      description: Missing or invalid auth
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponseOfAny'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponseOfAny'
+    ApiResponseSuccessFlag:
+      description: Success wrapper for command-style endpoints
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponseOfSuccessFlag'
+  schemas:
+    ApiResponseBase:
+      type: object
+      required: [success, message, errors, traceId]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+        traceId:
+          type: string
+    ApiResponseOfAny:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data: {}
+    ApiResponseOfSuccessFlag:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                verified:
+                  type: boolean
+                resent:
+                  type: boolean
+                loggedOut:
+                  type: boolean
+                submitted:
+                  type: boolean
+    ApiResponseOfLoginPayload:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [tokens, profile]
+              properties:
+                tokens:
+                  $ref: '#/components/schemas/AuthTokens'
+                profile:
+                  $ref: '#/components/schemas/MemberProfile'
+    ApiResponseOfMemberProfile:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/MemberProfile'
+    ApiResponseOfMachineListingArray:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/MachineListing'
+    ApiResponseOfDefaultRules:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/DefaultRules'
+    ApiResponseOfDealResult:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/DealResult'
+    ApiResponseOfDrawResult:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/DrawResult'
+    ApiResponseOfRewardStatus:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/RewardStatus'
+    ApiResponseOfWalletLedgerEntry:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/WalletLedgerEntry'
+    ApiResponseOfWalletLedgerEntryArray:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/WalletLedgerEntry'
+    ApiResponseOfOfferArray:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Offer'
+    ApiResponseOfContactTypeArray:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/ContactType'
+    ApiResponseOfTermsResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/TermsResponse'
+    ApiResponseOfStringMap:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              type: object
+              additionalProperties:
+                type: string
+    ApiResponseOfStringArray:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                type: string
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    SignupRequest:
+      type: object
+      required: [username, password, phoneNumber]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        phoneNumber:
+          type: string
+    VerifyOtpRequest:
+      type: object
+      required: [username, otpCode]
+      properties:
+        username:
+          type: string
+        otpCode:
+          type: string
+    ResendOtpRequest:
+      type: object
+      required: [username]
+      properties:
+        username:
+          type: string
+    TransferRequest:
+      type: object
+      required: [amount, reference, direction]
+      properties:
+        amount:
+          type: number
+          format: decimal
+        reference:
+          type: string
+        direction:
+          type: string
+    ContactReportRequest:
+      type: object
+      required: [contactTypeId, subject, message]
+      properties:
+        contactTypeId:
+          type: integer
+          format: int32
+        subject:
+          type: string
+        message:
+          type: string
+    DealRequest:
+      type: object
+      required: [machineId, betAmount]
+      properties:
+        machineId:
+          type: integer
+          format: int32
+        betAmount:
+          type: number
+          format: decimal
+    DrawRequest:
+      type: object
+      required: [roundId, holdIndexes]
+      properties:
+        roundId:
+          type: string
+          format: uuid
+        holdIndexes:
+          type: array
+          items:
+            type: integer
+            format: int32
+    DoubleUpRequest:
+      type: object
+      required: [roundId, guess]
+      properties:
+        roundId:
+          type: string
+          format: uuid
+        guess:
+          type: string
+          enum: [big, small]
+
+    AuthTokens:
+      type: object
+      required: [accessToken, refreshToken, expiresAt]
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+    MemberProfile:
+      type: object
+      required: [userId, username, displayName, phoneNumber, walletBalance, lastSeenUtc]
+      properties:
+        userId:
+          type: string
+          format: uuid
+        username:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+          nullable: true
+        phoneNumber:
+          type: string
+        walletBalance:
+          type: number
+          format: decimal
+        lastSeenUtc:
+          type: string
+          format: date-time
+    MachineListing:
+      type: object
+      required: [id, name, isOpen, minBet, maxBet]
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        isOpen:
+          type: boolean
+        minBet:
+          type: number
+          format: decimal
+        maxBet:
+          type: number
+          format: decimal
+    DefaultRules:
+      type: object
+      required: [payoutMultipliers]
+      properties:
+        payoutMultipliers:
+          type: object
+          additionalProperties:
+            type: number
+            format: decimal
+    PokerCard:
+      type: object
+      required: [rank, suit, code]
+      properties:
+        rank:
+          type: string
+        suit:
+          type: string
+        code:
+          type: string
+    DealResult:
+      type: object
+      required: [roundId, cards, betAmount, walletBalanceAfterBet]
+      properties:
+        roundId:
+          type: string
+          format: uuid
+        cards:
+          type: array
+          items:
+            $ref: '#/components/schemas/PokerCard'
+        betAmount:
+          type: number
+          format: decimal
+        walletBalanceAfterBet:
+          type: number
+          format: decimal
+    DrawResult:
+      type: object
+      required: [roundId, cards, handRank, winAmount, walletBalanceAfterRound]
+      properties:
+        roundId:
+          type: string
+          format: uuid
+        cards:
+          type: array
+          items:
+            $ref: '#/components/schemas/PokerCard'
+        handRank:
+          type: string
+        winAmount:
+          type: number
+          format: decimal
+        walletBalanceAfterRound:
+          type: number
+          format: decimal
+    RewardStatus:
+      type: object
+      required: [roundId, status, payoutAmount, walletBalance]
+      properties:
+        roundId:
+          type: string
+          format: uuid
+        status:
+          type: string
+        payoutAmount:
+          type: number
+          format: decimal
+        walletBalance:
+          type: number
+          format: decimal
+    WalletLedgerEntry:
+      type: object
+      required: [id, amount, balanceAfter, type, reference, createdUtc]
+      properties:
+        id:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+        balanceAfter:
+          type: number
+          format: decimal
+        type:
+          type: string
+        reference:
+          type: string
+        createdUtc:
+          type: string
+          format: date-time
+    Offer:
+      type: object
+      required: [id, title, description, bonusAmount]
+      properties:
+        id:
+          type: integer
+          format: int32
+        title:
+          type: string
+        description:
+          type: string
+        bonusAmount:
+          type: number
+          format: decimal
+    ContactType:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+    TermsResponse:
+      type: object
+      required: [version, bodyMarkdown, updatedUtc]
+      properties:
+        version:
+          type: string
+        bodyMarkdown:
+          type: string
+        updatedUtc:
+          type: string
+          format: date-time
+    NegotiateResponse:
+      type: object
+      properties:
+        connectionId:
+          type: string
+        connectionToken:
+          type: string
+        negotiateVersion:
+          type: integer
+          format: int32
+        availableTransports:
+          type: array
+          items:
+            type: object
+            properties:
+              transport:
+                type: string
+              transferFormats:
+                type: array
+                items:
+                  type: string

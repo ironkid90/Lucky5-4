@@ -1,0 +1,346 @@
+Architectural Blueprint of Compensated Payout Algorithms in Retro Amusement Poker Boards
+Introduction to the Deterministic Arcade Landscape
+The late 1990s and early 2000s marked a unique era in the evolution of electronic amusement devices, particularly within grey-market gaming environments. In regions with ambiguous regulatory frameworks, such as Lebanon and the broader Middle East, the arcade landscape was dominated by distinctive video poker cabinets. Titles like "Super Bonus," "Lucky 5," and "Malak" became ubiquitous in cafes and amusement centers. Unlike the highly regulated hardware found in Las Vegas casinos, which operate under strict mandates requiring true, memoryless Random Number Generation (RNG), these regional amusement boards utilized a fundamentally different mathematical paradigm. They were powered by highly sophisticated "compensated" payout algorithms designed to masquerade as games of chance while functioning as strict, deterministic financial ledgers.   
+
+The primary directive of these retro arcade boards was not to simulate a fair deck of fifty-two cards. Instead, their core computational purpose was to guarantee a specific, operator-defined Return to Player (RTP) percentage while simultaneously utilizing complex psychological manipulation to maximize player retention and session duration. The distinction between the predictable, often flat experience of modern mobile poker clones and the masterful, "unfair" logic of these retro boards lies entirely in the latter's ability to seamlessly mask its deterministic nature. Modern clones frequently rely on simplistic cyclic payouts or flawed pseudo-random number generators (PRNGs) that fail to build narrative tension or emotional investment. In stark contrast, the original hardware—often developed by companies like Amcoe or Bonanza Enterprise —executed complex state machines that actively read player behavior. These algorithms engineered volatile "hot" and "cold" phases, generated agonizing "near miss" states to provoke cognitive dissonance, and deployed highly coveted safety nets, such as the "Lucky 5" jackpot, to rescue players at the precise moment of abandonment.   
+
+To fully understand or replicate this specific, high-quality unfair logic, one must deconstruct the system design from the hardware level up to the psychological state machine. This report reverse-engineers the compensated algorithmic architecture of these retro video poker boards, contrasting their sophisticated ledger-based deception with the predictable mechanics of modern digital clones.
+
+Hardware Constraints and the 8-Bit Processing Ecology
+The algorithmic elegance of the compensated poker engine cannot be decoupled from the hardware environment in which it was born. The arcade boards of the era, such as the Amcoe "Skill 98" and the Bonanza Enterprise "Mini Boy," were severely constrained by the limitations of 8-bit processing. Operating primarily on the Zilog Z80 and the MOS Technology 6502 microprocessors, these boards lacked the computational overhead available to modern developers.   
+
+Writing a true, cryptographically secure random number generator on a Z80 processor running at a mere 4 MHz is computationally prohibitive and practically impossible without external entropy sources. The Z80 lacks native hardware for entropy generation, and executing complex floating-point mathematics for true probabilistic distribution would consume excessive clock cycles, resulting in unacceptable gameplay latency. Consequently, the 8-bit registers and limited processing power forced software engineers to write highly optimized, bare-metal Assembly code that relied on pseudo-random logic driven by internal, deterministic state variables rather than true external randomness.   
+
+Hardware Component	Function within the Compensated Poker Architecture
+Zilog Z80 / MOS 6502 CPU	
+The core processor executing the assembly-level financial ledger, handling input/output interrupts, and managing the state machine transitions.
+
+36/10 Pin Cherry Master Harness	
+The standard physical interface connecting the Printed Circuit Board (PCB) to the cabinet's bill acceptor, physical buttons, payout hopper, and accounting meters.
+
+Battery-Backed SRAM	
+Non-volatile memory utilized to retain the global capital input and output variables across power cycles, ensuring the ledger is never reset by simply unplugging the machine.
+
+Physical DIP Switches	
+Hardware toggles mounted directly on the PCB, allowing arcade operators to manually encode the target Return to Player (RTP) percentage and adjust the game's overall volatility parameters.
+
+OKI M6295 ADPCM Chip	
+A dedicated audio co-processor used to trigger highly specific, psychologically conditioned auditory feedback during "near misses" and "Super Bonus" escalation events.
+
+  
+Because true randomness was computationally expensive, developers created systems that were fundamentally non-random. However, an uncompensated pseudo-random system poses a catastrophic financial risk to an arcade operator. If a simple PRNG happens to output a low-probability mathematical sequence, a machine could theoretically dispense consecutive Royal Flushes, effectively bankrupting the operator. To completely eliminate this risk, developers wrote assembly routines that checked the non-volatile memory of the battery-backed SRAM before ever initiating a card draw sequence. MAME (Multiple Arcade Machine Emulator) reverse-engineering efforts, particularly those analyzing Amcoe and IGS poker hardware, have revealed the extensive nature of these DIP switch configurations and memory checks. The hardware allowed arcade owners to manually dictate the machine's strict payout parameters, confirming that the software was designed from its inception to act as an infallible financial regulator rather than a fair statistical simulator.   
+
+The Compensated Payout Algorithm: A Deterministic Ledger
+The foundational architecture of the "Lucky 5," "Super Bonus," and "Sold Carre" machines rests entirely on the concept of compensated game control. In a heavily regulated jurisdiction, such as a casino operating under Nevada Gaming Commission standards, the probability of drawing any specific card must be entirely independent of the machine's previous financial history. In those environments, the RTP is achieved purely through the law of large numbers over millions of simulated independent events.   
+
+Conversely, in a compensated machine, the probability of a specific game outcome is strictly and mathematically dependent on the results of the games that preceded it. The algorithm functions as a localized, highly aggressive accounting system. At the start of every single poker hand, before the first card is ever rendered on the cathode-ray tube (CRT) monitor, the CPU evaluates the machine's current financial reality against the arcade operator's mandated target.   
+
+Mathematical Modeling of the Financial Feedback Loop
+To understand the core logic, one must define the variables tracked within the machine's SRAM. Let the variable V 
+in
+​
+  represent the total volume of credits inserted into the machine over its operational lifetime, and let V 
+out
+​
+  represent the total volume of credits dispensed to players. The current observed Return to Player, denoted as R 
+current
+​
+ , is continuously calculated by the microprocessor as the ratio of outgoing capital to incoming capital:
+
+R 
+current
+​
+ = 
+V 
+in
+​
+ 
+V 
+out
+​
+ 
+​
+ 
+The arcade operator utilizes the physical PCB DIP switches to establish a Target Return to Player, denoted as T 
+target
+​
+ , which typically ranges from 0.70 to 0.90 (70% to 90%) depending on the desired profitability of the specific venue. The core compensated algorithm evaluates the delta, or Δ, between the machine's current reality and the operator's target:   
+
+Δ=T 
+target
+​
+ −R 
+current
+​
+ 
+This delta serves as the master input variable for the machine's state transition matrix. If the calculation reveals that Δ<0, the machine has paid out a higher percentage of capital than the operator intended. Consequently, the system must "compensate" by entering a highly restrictive, deterministic state where winning poker hands are computationally suppressed and suppressed aggressively. If the calculation reveals that Δ>0, the machine has accumulated excess capital beyond the operator's margin and must systematically distribute payouts to maintain the illusion of fairness, prevent player attrition, and encourage continued engagement.   
+
+Abstracting the Reverse-Lookup Logic
+A reverse-engineered conceptualization of this primary Z80 logic reveals the stark departure from fair probability. In a fair game, the deck is shuffled, five cards are drawn, the player holds, replacements are drawn, and the final hand determines the payout. In the compensated model, this chronological flow is entirely inverted. This inversion is commonly referred to in reverse-engineering circles as a "reverse-lookup" architecture.   
+
+The algorithm determines the financial outcome of the hand first, and then visually constructs a sequence of cards to justify that predetermined outcome to the player. The structural logic dictates that the actual dealing of the cards is merely a graphical presentation layer, entirely disconnected from statistical probability. The machine first queries the ledger to decide whether the player is permitted to win based on the current Δ. If a win is mathematically permissible, the algorithm calculates the exact monetary value of that allowable win budget. Only after this financial ceiling is established does the software search its ROM tables to find a five-card hand that perfectly matches that predetermined payout.   
+
+If the ledger dictates that the player must lose—which is the statistically dominant outcome during a capital accumulation phase—the machine does not simply deal five random garbage cards. Doing so repeatedly would expose the machine's deterministic nature. Instead, the algorithm branches into the most sophisticated component of the software: the near-miss generation engine.
+
+The State Machine Architecture: Navigating Hot, Cold, and Tease Phases
+To successfully mask the deterministic ledger from the player, the algorithm relies on a highly complex, multi-tiered state machine. If an arcade board simply refused to pay out entirely when Δ<0, players would rapidly identify the hardware as rigged, leading to total machine abandonment. Therefore, the software partitions the gameplay loop into distinct psychological phases, dynamically transitioning between them to maintain player engagement while strictly adhering to the financial ledger.
+
+The Cold State: Aggressive Capital Accumulation
+When the machine is in a capital accumulation phase, the internal RNG is effectively neutralized. The primary goal of this state is to drain player credits as efficiently as possible while maintaining the facade of a standard poker game. During the initial deal, the algorithm may actually present the player with highly stimulating starting hands. The machine might deal a pair of face cards or four cards to a flush, immediately spiking the player's adrenaline and encouraging them to increase their bet or commit to the draw.
+
+However, once the player presses the physical "Hold" buttons on the Cherry Master harness to switch their cards , the algorithm actively cross-references the remaining deck array in memory. In a fair algorithm, if a player holds a pair of Jacks, the processor would draw randomly from the remaining forty-seven cards, offering a statistically fixed chance to hit three-of-a-kind or two pair. The compensated Z80 algorithm, however, operates differently. It parses the deck array stored in RAM, explicitly identifies the remaining Jacks and all other mathematically beneficial cards, and temporarily nullifies their index pointers. The subsequent draw is then executed exclusively from a dynamically generated subset of mathematically useless cards. The player perceives this as bad luck, unaware that the game state collapsed into a guaranteed loss the moment the "Deal" button was pressed.   
+
+The Tease State: Engineering the Near Miss
+The absolute hallmark of premium retro amusement poker—and the specific element glaringly absent from cheaply produced modern mobile clones—is the meticulously crafted "near miss" state. The engineers who designed algorithms for companies like Bonanza Enterprise and Amcoe understood a fundamental psychological principle of gambling: a catastrophic loss results in immediate player churn, whereas a loss that visually mimics a near-victory triggers a dopamine response that is nearly identical to an actual win.   
+
+The assembly routine responsible for a near miss explicitly constructs losing hands that sit exactly one card or one rank away from a massive payout. If the machine determines that it is in the Tease State, the internal logic operates through a highly structured sequence of deceptive rendering.   
+
+First, the algorithm deals an initial hand designed to provoke a specific strategic hold from the player. For instance, it may deal four cards of the same suit, such as the 4, 5, 6, and Queen of Spades, alongside one completely disconnected off-suit card, such as the Jack of Hearts. Basic video poker strategy dictates that the player will inevitably hold the four Spades and discard the Jack of Hearts, chasing the highly lucrative flush payout.   
+
+Once the player inputs their holds and requests the draw, the algorithmic substitution protocol engages. The machine recognizes that the player is attempting to complete a flush. Because the ledger indicates that R 
+current
+​
+  is greater than T 
+target
+​
+ , the system is strictly prohibited from dispensing the flush payout. However, instead of simply dealing a random non-Spade to complete the loss, the system accesses a specialized tease matrix. It specifically selects a card that is mathematically devastating but visually agonizing.
+
+Near-Miss Archetype	Algorithmic Execution	Psychological Impact on Player
+The Sequential Tease	The system recognizes a flush draw and deliberately deals a card that completes a straight in terms of rank, but belongs to the wrong suit.	Provokes the feeling of "wrong game" or "almost perfect," encouraging the player to try again.
+The Ghost Card Return	The system tracks the exact card the player discarded (e.g., the Jack of Hearts) and artificially deals that exact card back to them in the draw phase.	Induces intense frustration and a false belief that the deck is truly random but uniquely punishing.
+The One-Gap Straight	The system deals an inside straight draw (e.g., 5, 6, 8, 9) and ensures the draw card is either a 4 or a 10, resting precisely on the outside edges of the required 7.	Creates the illusion that the required card was physically adjacent in the virtual deck, maximizing cognitive dissonance.
+This illusion of near-success is critical to the revenue model of the machine. In the United Kingdom, certain Category C "fruit machines" were legally permitted to utilize compensated percentage logic under specific gambling commission guidelines. This legality led to a well-documented phenomenon where observant players would "vulture" machines. They would passively watch a machine until they observed another player endure a long, agonizing losing streak filled with near-misses. The observing player would then immediately take over the machine once it was abandoned, knowing with mathematical certainty that the internal ledger was forced to swing back into a payout phase to balance the RTP.   
+
+The Lebanese arcade scene exhibited identical behavioral adaptations regarding machines like "Super Bonus" and "Sold Carre". Veteran players would intimately study the near-miss frequencies and specific visual tease patterns of the cabinets, attempting to reverse-engineer the internal state of the Z80 ledger through pure observation. The complexity of the tease state is what separates a high-quality compensated algorithm from a poor one; a poor algorithm simply denies the win, while a masterful algorithm convinces the player that the win was stolen from them by mere chance.   
+
+The Hot State: Calculated and Spaced Distribution
+When the internal ledger indicates that a payout is mathematically required to maintain the target RTP (Δ≫0), the machine transitions into the Hot State. However, a sophisticated compensated algorithm does not simply dump its accumulated capital in a single, massive payout. Doing so would fulfill the mathematical requirement but fail to maximize the psychological engagement of the player. Instead, the algorithm spaces the payouts over time, creating a sustained "hot streak" that artificially inflates the player's perceived skill and luck.
+
+The algorithm utilizes its internal budget calculation to determine a strict financial ceiling for the session. If the ledger dictates that the machine must return 500 credits to balance the mathematics, the machine will almost never deal a single 500-credit Royal Flush. Instead, the algorithm dynamically parses the payout tables and breaks the 500-credit debt into smaller, discrete chunks. It will systematically deal a series of Full Houses, Flushes, and Three-of-a-Kind hands over the course of twenty or thirty minutes, significantly prolonging the player's time-on-device.   
+
+Furthermore, during the Hot State, the machine may deliberately deploy reverse psychology. It may deal an initial hand consisting of completely uncoordinated, low-value cards, essentially forcing the player to discard all five cards in frustration. However, upon the redraw, the algorithm will miraculously construct a perfectly coordinated straight or flush from the five new cards. This specific sequence manufactures the powerful illusion that the player's "skill" and decisiveness in discarding the initial bad hand directly resulted in the victory, deeply reinforcing their confidence in their own agency and masking the fact that the machine had predetermined the payout before the coin was even inserted.
+
+Deconstructing the "Malak" Double-Up Feature: The Illusion of Agency
+One of the most defining and culturally specific characteristics of the Lebanese and broader Middle Eastern retro video poker variants is the aggressive integration of the "Double Up" feature, colloquially associated with the "Malak". In local dialects, "Malak" translates to King or Angel, and within the context of these arcade boards, it refers both to specific high-value wild cards and the high-stakes gamble feature that activates after a winning hand.   
+
+When a player achieves any winning combination, the primary game loop halts, and the machine presents an interface offering the player the option to gamble their current payout for double the credits. In a fair, independently randomized casino game, the Double Up mechanic is a true zero-expectation bet. The machine reveals a central card, and the player must press a physical button to guess whether the next card drawn from the deck will be mathematically higher or lower than the revealed card. Assuming a fair, standard deck, true RNG dictates an approximate 50% probability of success, discounting ties.   
+
+In the architecture of a compensated arcade board, however, the "Malak" Double Up is not an independent, randomized sub-game. It is a heavily weaponized extension of the main financial ledger, designed specifically to claw back capital that the machine was forced to pay out during the primary hand. The Double Up is inextricably linked to the global payout variable, making it one of the most mathematically deceptive features of the entire software suite.   
+
+The Quantum Mechanics of the High/Low Gamble
+When the player opts to double a 100-coin win, the CPU immediately intercepts the request and calculates whether dispensing 200 coins violates the T 
+target
+​
+  threshold established by the DIP switches. The outcome of the gamble is decided in this exact microsecond, entirely independent of the player's input.
+
+If the internal ledger has accumulated enough excess capital to support the 200-coin hit, the machine may allow the player to win the gamble. However, if the ledger cannot support the increased payout, the player's loss is mathematically guaranteed before their finger ever touches the physical "High" or "Low" buttons on the cabinet fascia.   
+
+The mechanism by which this guaranteed loss is executed represents a masterclass in retro software deception and interrupt handling. The machine essentially creates a state of quantum superposition on the screen, waiting for the hardware interrupt triggered by the player's button press. The card that will be revealed does not actually exist in memory until the player makes their choice.
+
+Consider a scenario where the central card displayed on the CRT is an 8.
+
+If the player assesses the odds and presses the "High" button, the Z80 microprocessor registers the interrupt and instantly branches to a failure routine that pulls a 7, 6, 5, 4, 3, or 2 from the virtual deck array, ensuring the player loses.
+
+If the exact same player, in the exact same game state, decides to press the "Low" button on that same 8, the processor dynamically swaps the outcome array in real-time. It intercepts the "Low" input and instead pulls a 9, 10, Jack, Queen, or King from memory, once again ensuring a total loss of credits.   
+
+Furthermore, the "Malak" card itself is often programmed to act as the unbeatable, omnipotent house card. In variations of the double-up game where the player must pick one of four hidden face-down cards to beat a single dealer face-up card, the algorithm will dynamically assign the "Malak" (acting as the highest possible wild card) to the dealer's position if the ledger requires the player to lose the gamble. The software essentially collapses the quantum state of the hidden cards only after the player has committed to their choice, ensuring the house retains absolute, unyielding control over the financial ledger while entirely offloading the psychological blame for the loss onto the player's "poor choice".   
+
+The "Lucky 5" Escalation and the Deterministic Safety Net
+The namesake features of these specific cabinets—the "Lucky 5" and the "Super Bonus"—serve as the ultimate psychological hooks and the system's primary algorithmic safety nets. In a purely random system driven by uncompensated RNG, an infinite losing streak is statistically possible, albeit astronomically improbable. However, in a compensated system, an extended, brutal losing streak is not just a possibility; it is a mathematical certainty during the capital accumulation phase.   
+
+Developers understood that prolonged, inescapable cold phases inevitably lead to terminal player abandonment. If a machine simply drains capital without offering hope, the player will leave and never return. To counter this inherent flaw in the compensated model, the algorithm features a highly sophisticated deterministic "pity timer." This logic operates similarly to the revenue-based payout models utilized in modern arcade claw machines, where the physical grip strength of the claw is programmatically overridden to maximum power only after a specific, hidden monetary threshold has been deposited into the coin slot.   
+
+The Pity Timer Mechanism and Capital Release
+Deep within the Z80's memory map, the software maintains a localized, short-term variable that tracks the player's immediate suffering. This variable tracks either the total number of consecutive non-winning spins or the total volume of consecutive unrewarded capital inserted by the current player during the active session. Let this variable be denoted as C 
+streak
+​
+ . Concurrently, the operator configures a maximum pain threshold via the system settings, denoted as C 
+max
+​
+ .
+
+When the tracking variable breaches the threshold (C 
+streak
+​
+ ≥C 
+max
+​
+ ), the machine triggers a hidden escalation protocol. The user interface often signals this impending shift through subtle, conditioned cues. The OKI ADPCM audio chip may trigger specific sound effects , or the CRT monitor may flash in a specific sequence, indicating to veteran players that the machine is "due" for a massive mathematical correction.   
+
+The Execution of the Super Bonus
+When the protocol is fully engaged, the machine completely overrides all standard probability matrices and actively arms the "Super Bonus". The Super Bonus is not a game of chance; it is a forced-win state, a deterministic event executed by the software to save the player from abandonment. During this state, the machine guarantees the delivery of an extraordinarily rare poker hand. Most commonly in Lebanese arcades, this takes the form of the "Lucky 5," a hand consisting of five-of-a-kind, made possible by the inclusion of the machine's joker or Malak wild cards.   
+
+The mathematical beauty of the Super Bonus within a compensated framework is that it is never a financial loss for the operator. It is not a random jackpot hitting against the house's odds; rather, it is a meticulously calculated release of the exact capital that was aggressively harvested from the player during the prolonged cold state.
+
+Feature Category	Algorithmic Mechanism	Psychological Effect on Player	Global Ledger Impact
+The Near Miss	
+Forces discarded card matches or one-off sequential draws regardless of true deck probability.
+
+Simulates the intense thrill of a win without dispensing cash; encourages immediate, emotionally driven re-betting.	Highly Positive (Operator rapidly accumulates capital without payout).
+Malak Double-Up	
+Interrupt-driven, post-input variable swapping based strictly on the Δ threshold.
+
+Creates the illusion of high-stakes skill; effectively offloads blame for the inevitable loss onto the player's agency.	Positive / Neutral (Erases previous minor wins, maintaining the ledger balance).
+Lucky 5 / Super Bonus	
+Deterministic pity-timer triggered when session losses exceed the C 
+max
+​
+  threshold.
+
+Erases the memory of the brutal cold streak; creates massive euphoria; solidifies long-term player loyalty to the cabinet.	Controlled Negative (Calculated capital release to reset the psychological loop).
+  
+The payout generated by the Lucky 5 hand is mathematically calibrated by the algorithm to be slightly less than the total capital the player drained into the machine during the C 
+streak
+​
+  phase. The player experiences the overwhelming euphoria of hitting a massive, seemingly impossible jackpot, entirely unaware that their net session balance remains mathematically negative, precisely adhering to the strict T 
+target
+​
+  margin set by the operator's DIP switches. The machine has successfully sold the player their own money back to them at a premium, framing the transaction as a stroke of incredible luck.   
+
+The Algorithmic Divergence: Modern Mobile Clones vs. Retro Depth
+The discrepancy between the sophisticated, masked unfairness of retro arcade hardware and the predictable, often flat experience of modern mobile clones is rooted in fundamental differences in software engineering philosophy, modern regulatory compliance, and shifting monetization models. As the gaming industry transitioned from physical cabinets to digital applications, the underlying mathematical architecture of video poker underwent a radical simplification.
+
+The Psychological Deficit of True RNG
+Modern digital storefronts, regulated online casinos, and even standard mobile app store clones generally mandate the use of True RNG or highly audited, cryptographically secure PRNG algorithms. While this standardization ensures absolute mathematical fairness and protects the consumer from rigged outcomes, it ironically results in a psychologically inferior entertainment experience.   
+
+True randomness is inherently clumpy, chaotic, and completely memoryless. A fair, modern Math.random() algorithm does not know or care that a player has just lost fifty consecutive hands and is on the verge of deleting the application. It will not dynamically deploy a "Super Bonus" safety net to rescue the player's engagement, nor will it artificially engineer a beautiful near-miss to keep them hooked. Conversely, it might accidentally dispense three Royal Flushes in a row, destroying the application's internal economy. Because modern mobile clones rely on simplistic true RNG to generate outcomes, they completely lack the narrative arc engineered into the retro machines. There is no programmed build-up, no calculated tension, no agonizing tease, and ultimately, no deterministic catharsis.   
+
+The Simplification of Cloned Algorithms
+Furthermore, unauthorized or independently developed modern mobile clones of retro games almost universally lack the deep engineering required to replicate the original Z80 assembly code. Developing a fluid, undetectable compensated ledger that dynamically manipulates discard arrays in real-time, calculates maximum allowable win budgets on the fly, and perfectly executes Double-Up branching logic requires significant mathematical modeling. It requires an understanding of dynamic programming, akin to solving complex equations for state optimization across multiple variables.   
+
+Many modern mobile developers simply map a static probability array to a graphical Unity or HTML5 interface. If the game's simplistic logic wants the player to lose, it merely deals five completely uncoordinated garbage cards. It completely lacks the complex generate_near_miss_tease() routines that characterized the masterful deception of the original Bonanza and Amcoe boards.   
+
+When modern games do attempt to implement a "pity system"—such as the explicit 'gacha' guarantees found in modern mobile RPGs—it is almost always displayed transparently to the user as a visual countdown meter. The game overtly tells the player, "You are guaranteed a win in 10 spins," stripping away all the mystery and replacing algorithmic seduction with mechanical, predictable grinding.   
+
+The retro Lebanese "Lucky 5" and "Super Bonus" machines succeeded precisely because the unfairness was a masterfully kept secret. The Z80 processor functioned as an invisible, omniscient dungeon master, constantly monitoring the player's emotional state and financial reserves. It dynamically altered the very fabric of probability to deliver crushing defeats perfectly disguised as near-misses, and engineered euphoric victories precisely when the player was on the brink of walking away forever.   
+
+Strategic Implementation of the Poker Facade
+The engineering required to construct a functional, invisible compensated poker engine on early microprocessors represents a fascinating chapter in computational history. The designers of these boards were not merely programming a card game; they were writing highly optimized algorithms designed to model, predict, and manipulate human behavior within incredibly strict financial parameters.   
+
+By utilizing battery-backed SRAM to maintain an indelible financial ledger across years of operation , and relying on the Z80's rapid pointer manipulation to instantly swap probability tables mid-execution without dropping a frame , these systems created a flawless illusion of chance. The cards displayed on the cathode-ray tube were nothing more than a post-calculated graphical representation of an accounting decision made microseconds earlier in the silicon.   
+
+Poker was the absolutely ideal vehicle for this specific type of algorithmic deception. Unlike a traditional slot machine, where the player's interaction is limited to pulling a lever or pressing a spin button and passively watching the reels, video poker demands constant, active player input. The player must evaluate the initial board, calculate perceived odds based on their knowledge of standard poker strategies, and physically choose which cards to hold and which to discard.   
+
+This powerful illusion of agency is the bedrock upon which the compensated algorithm hides its determinism. When the machine enters the Tease State and deals four Spades and a Heart, the player's active decision to hold the Spades makes them a complicit participant in their own engineered failure. When the subsequent draw yields the wrong suit, the player inherently blames their own bad luck or the "cruelty of the deck," completely unaware that the algorithm had already parsed the deck array and purged all remaining Spades from the allowable draw memory block. The machine successfully convinces the player that their choices matter, even when the mathematical outcome was sealed before the game began.   
+
+Similarly, the "Malak" Double-Up feature weaponizes the player's own greed and desire for control against them. By forcing the player to make a binary choice (High or Low) to double their money , the machine offloads the psychological responsibility of the loss entirely onto the player. The player believes they simply guessed wrong, completely ignorant of the fact that the algorithm utilized retroactive variable swapping to ensure that whichever button they pressed was mathematically guaranteed to be the incorrect one.   
+
+Conclusion
+The sophisticated "fake RNG" systems governing retro arcade poker games like "Lucky 5," "Super Bonus," and "Sold Carre" stand as remarkable, albeit ethically ambiguous, examples of applied behavioral mathematics operating under severe hardware constraints. Operating on rudimentary Z80 and 6502 processors , these PCBs intentionally discarded true statistical probability in favor of a deterministic, compensated financial ledger. This architecture guaranteed arcade operator profit margins while simultaneously maximizing player retention through relentless psychological manipulation.   
+
+Through the meticulous implementation of hidden state machines, these algorithms seamlessly transitioned between cold capital accumulation phases, maddening "near-miss" tease states, and the calculated, explosive euphoria of the "Super Bonus" pity-timer payouts. Furthermore, specific localized features like the "Malak" Double-Up provided an incredibly potent illusion of skill and choice, effectively masking the retroactive variable manipulation that guaranteed the house's insurmountable advantage.   
+
+Modern mobile clones, which are often legally or technically reliant on flat, memoryless True RNG or simplistic predetermined loss generation, inevitably fail to replicate the deep narrative tension, dynamic pacing, and psychological grip of their arcade predecessors. The original grey-market boards did not succeed because they accurately simulated a deck of cards; they succeeded because they were engineered to perfectly simulate, and weaponize, the elusive nature of luck itself.   
+
+
+youtube.com
+Super Bonus (Video Poker Amusement Games in Lebanon)
+Opens in a new window
+
+appbrain.com
+Video Poker Lebanon for Android - App Stats & Insights - AppBrain
+Opens in a new window
+
+forum.arduino.cc
+Algorithm of a Gambling Machine - General Guidance - Arduino Forum
+Opens in a new window
+
+reddit.com
+Is Compensated Anarchist a Gambling Term? : r/DungeonCrawlerCarl - Reddit
+Opens in a new window
+
+reddit.com
+ELI5: If slot machines are random numbers, how can they be programmed to win a certain number of times? How can something be both random and programmed? : r/explainlikeimfive - Reddit
+Opens in a new window
+
+stackoverflow.com
+slot machine payout calculation - Stack Overflow
+Opens in a new window
+
+mamedev.org
+whatsnew_0130.txt - MAME
+Opens in a new window
+
+library.oapen.org
+Tempest: Geometries of Play - OAPEN Library
+Opens in a new window
+
+ebay.com
+Mini Boy 7 Video Poker Machine Manual on CD - eBay
+Opens in a new window
+
+reddit.com
+I'm a mathematician for slot games. Why do people say they're rigged? It's likely my fault. Let's talk about that. AMA - Reddit
+Opens in a new window
+
+issc.al.uw.edu.pl
+The Fourth Revolution: How the Infosphere Is Reshaping Human Reality - Interdisciplinary Studies on Social Change
+Opens in a new window
+
+reddit.com
+Z80 assembly : r/Assembly_language - Reddit
+Opens in a new window
+
+cryptomuseum.com
+DSP-9000 - Crypto Museum
+Opens in a new window
+
+colorcomputerarchive.com
+80-US Nov/Dec 1979 - Color Computer Archive
+Opens in a new window
+
+ebay.com
+Bonus Spin Bonanza Cherry Master PCB Game Board POG Pot O Gold Fruit Slot | eBay
+Opens in a new window
+
+mamedev.org
+whatsnew_0129u4.txt - MAME
+Opens in a new window
+
+wiki.mamedev.org
+MAME 0.129u4 - MAMEDEV Wiki
+Opens in a new window
+
+news.ycombinator.com
+The gambler's fallacy is not a fallacy? - Hacker News
+Opens in a new window
+
+disabled-world.com
+Are Slot Machines Really Random? Truth About Payouts | DW - Disabled World
+Opens in a new window
+
+casinocenter.com
+TEST TIME - Video Poker ⋆ Casino Player Magazine
+Opens in a new window
+
+cardplayer.com
+How to Play Video Poker: Rules, Variants, Strategies & Tips - Card Player
+Opens in a new window
+
+casinocitytimes.com
+Double Bonus Strategy Adjustments - CasinoCityTimes.com
+Opens in a new window
+
+ypfuns.com
+2025 Mechanism Guide: How Do Claw Machines Work? - YPFuns
+Opens in a new window
+
+oag.ca.gov
+California Grand Casino - Summary and Specifics of Games
+Opens in a new window
+
+quora.com
+Is online gambling truly random like land-based casinos, or is it rigged with algorithms?
+Opens in a new window
+
+andrew.cmu.edu
+Reinforcement Learning - andrew.cmu.ed
+Opens in a new window
+
+dspace.cvut.cz
+Algorithms for Playing Multi-player Simplified Poker Bc. Martin Münch
+Opens in a new window
+
+scribd.com
+12TB GameList 新 | PDF | Nintendo | Wii - Scribd
+Opens in a new window

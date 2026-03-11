@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Lucky5.Api\Lucky5.Api.csproj" />
+    <ProjectReference Include="..\..\src\Lucky5.Application\Lucky5.Application.csproj" />
+    <ProjectReference Include="..\..\src\Lucky5.Domain\Lucky5.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

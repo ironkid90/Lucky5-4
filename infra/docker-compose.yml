@@ -1,0 +1,80 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: lucky5-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-lucky5}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - lucky5-postgres-data:/var/lib/postgresql/data
+      - ../server/sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-lucky5}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: lucky5-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ..
+      dockerfile: server/src/Lucky5.Api/Dockerfile
+    container_name: lucky5-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ASPNETCORE_URLS: http://+:8080
+      CONNECTIONSTRINGS__POSTGRES: Host=postgres;Port=5432;Database=${POSTGRES_DB:-lucky5};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}
+      REDIS__CONNECTION: redis:6379
+      JWT__ISSUER: ${JWT_ISSUER:-Lucky5}
+      JWT__AUDIENCE: ${JWT_AUDIENCE:-Lucky5.Client}
+      JWT__SIGNING_KEY: ${JWT_SIGNING_KEY:-dev-signing-key-change-me}
+      SIGNALR__HEARTBEAT_SECONDS: ${SIGNALR_HEARTBEAT_SECONDS:-20}
+      GAME__HOUSE_RULESET_VERSION: ${GAME_HOUSE_RULESET_VERSION:-v1}
+      CORS__ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:8080,http://localhost:5173}
+    ports:
+      - "5051:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8080/health/live || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: lucky5-nginx
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      api:
+        condition: service_healthy
+
+  seq:
+    image: datalust/seq:2024
+    container_name: lucky5-seq
+    environment:
+      ACCEPT_EULA: "Y"
+    ports:
+      - "5341:80"
+
+volumes:
+  lucky5-postgres-data:

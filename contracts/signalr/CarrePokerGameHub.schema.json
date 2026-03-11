@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lucky5.local/contracts/signalr/CarrePokerGameHub.schema.json",
+  "title": "CarrePokerGameHub v1",
+  "type": "object",
+  "properties": {
+    "clientToServer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "JoinMachine": {
+          "type": "object",
+          "required": ["machineId"],
+          "properties": {
+            "machineId": { "type": "integer" }
+          }
+        },
+        "LeaveMachine": {
+          "type": "object",
+          "required": ["machineId"],
+          "properties": {
+            "machineId": { "type": "integer" }
+          }
+        },
+        "Deal": {
+          "type": "object",
+          "required": ["machineId", "betAmount"],
+          "properties": {
+            "machineId": { "type": "integer" },
+            "betAmount": { "type": "number" }
+          }
+        },
+        "Draw": {
+          "type": "object",
+          "required": ["roundId", "holdIndexes"],
+          "properties": {
+            "roundId": { "type": "string", "format": "uuid" },
+            "holdIndexes": {
+              "type": "array",
+              "items": { "type": "integer" }
+            }
+          }
+        },
+        "DoubleUp": {
+          "type": "object",
+          "required": ["roundId", "guess"],
+          "properties": {
+            "roundId": { "type": "string", "format": "uuid" },
+            "guess": { "type": "string", "enum": ["big", "small"] }
+          }
+        },
+        "Heartbeat": {
+          "type": "object",
+          "additionalProperties": false
+        },
+        "ReconnectSync": {
+          "type": "object",
+          "required": ["machineId"],
+          "properties": {
+            "machineId": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "serverToClient": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "MachineStateUpdated": {
+          "type": "object",
+          "required": ["machineId", "activeRounds", "timestampUtc"],
+          "properties": {
+            "machineId": { "type": "integer" },
+            "activeRounds": { "type": "integer" },
+            "timestampUtc": { "type": "string", "format": "date-time" }
+          }
+        },
+        "CardsDealt": {
+          "type": "object",
+          "required": ["roundId", "cards", "betAmount", "walletBalanceAfterBet"],
+          "properties": {
+            "roundId": { "type": "string", "format": "uuid" },
+            "cards": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/pokerCard" }
+            },
+            "betAmount": { "type": "number" },
+            "walletBalanceAfterBet": { "type": "number" }
+          }
+        },
+        "CardRevealed": {
+          "type": "object",
+          "required": ["roundId", "cards", "handRank", "winAmount", "walletBalanceAfterRound"],
+          "properties": {
+            "roundId": { "type": "string", "format": "uuid" },
+            "cards": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/pokerCard" }
+            },
+            "handRank": { "type": "string" },
+            "winAmount": { "type": "number" },
+            "walletBalanceAfterRound": { "type": "number" }
+          }
+        },
+        "DoubleUpCard": {
+          "type": "object",
+          "required": ["roundId", "guess"],
+          "properties": {
+            "roundId": { "type": "string", "format": "uuid" },
+            "guess": { "type": "string", "enum": ["big", "small"] }
+          }
+        },
+        "RewardStatus": {
+          "type": "object",
+          "required": ["roundId", "status", "payoutAmount", "walletBalance"],
+          "properties": {
+            "roundId": { "type": "string", "format": "uuid" },
+            "status": { "type": "string" },
+            "payoutAmount": { "type": "number" },
+            "walletBalance": { "type": "number" }
+          }
+        },
+        "WalletUpdated": {
+          "type": "object",
+          "required": ["roundId", "walletBalanceAfterRound"],
+          "properties": {
+            "roundId": { "type": "string", "format": "uuid" },
+            "walletBalanceAfterRound": { "type": "number" }
+          }
+        },
+        "Error": {
+          "type": "object",
+          "required": ["code", "message"],
+          "properties": {
+            "code": { "type": "string" },
+            "message": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "pokerCard": {
+      "type": "object",
+      "required": ["rank", "suit", "code"],
+      "properties": {
+        "rank": { "type": "string" },
+        "suit": { "type": "string" },
+        "code": { "type": "string" }
+      }
+    }
+  },
+  "required": ["clientToServer", "serverToClient"]
+}

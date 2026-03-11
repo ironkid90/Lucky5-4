@@ -1,0 +1,7 @@
+* text=auto
+*.apk binary
+*.jar binary
+*.mp4 binary
+*.pcap binary
+*.png binary
+*.7z binary

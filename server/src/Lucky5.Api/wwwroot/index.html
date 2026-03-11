@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lucky 5 - Video Poker</title>
+    <link rel="stylesheet" href="/css/game.css">
+    <link rel="icon" href="/assets/images/coin.png">
+</head>
+<body>
+    <div id="game-container">
+        <div id="auth-screen">
+            <img class="logo" src="/assets/images/lucky5.png" alt="Lucky 5">
+            <div class="auth-box">
+                <h2 id="auth-title">LOGIN</h2>
+                <div id="auth-error" class="auth-error"></div>
+                <form id="auth-form" onsubmit="return false;">
+                    <input type="text" id="auth-username" placeholder="Username" autocomplete="off">
+                    <input type="password" id="auth-password" placeholder="Password">
+                    <button type="button" id="auth-submit" class="auth-btn">LOGIN</button>
+                </form>
+                <div id="auth-toggle" class="auth-toggle">No account? <span>Sign Up</span></div>
+            </div>
+        </div>
+
+        <div id="game-screen">
+            <div id="paytable">
+                <div class="pay-row rf" data-hand="RoyalFlush">
+                    <span class="hand-name">ROYAL FLUSH</span>
+                    <span class="pay-amount" data-mult="1000">0</span>
+                </div>
+                <div class="pay-row sf" data-hand="StraightFlush">
+                    <span class="hand-name">STRAIGHT FLUSH</span>
+                    <span class="pay-amount" data-mult="75">0</span>
+                </div>
+                <div class="pay-row foak" data-hand="FourOfAKind">
+                    <span class="hand-name">4 OF A KIND</span>
+                    <span class="pay-amount" data-mult="15">0</span>
+                </div>
+                <div class="pay-row fh" data-hand="FullHouse">
+                    <span class="hand-name">FULL HOUSE</span>
+                    <span class="pay-amount" data-mult="12">0</span>
+                </div>
+                <div class="pay-row fl" data-hand="Flush">
+                    <span class="hand-name">FLUSH</span>
+                    <span class="pay-amount" data-mult="10">0</span>
+                </div>
+                <div class="pay-row st" data-hand="Straight">
+                    <span class="hand-name">STRAIGHT</span>
+                    <span class="pay-amount" data-mult="8">0</span>
+                </div>
+                <div class="pay-row tok" data-hand="ThreeOfAKind">
+                    <span class="hand-name">3 OF A KIND</span>
+                    <span class="pay-amount" data-mult="3">0</span>
+                </div>
+                <div class="pay-row tp" data-hand="TwoPair">
+                    <span class="hand-name">2 PAIR</span>
+                    <span class="pay-amount" data-mult="2">0</span>
+                </div>
+            </div>
+
+            <div id="credit-stake-bar">
+                <div id="credits" class="credit-val">CREDIT<br><span>0</span></div>
+                <div id="win-indicator"></div>
+                <div id="stake-display" class="stake-val">STAKE<br><span>0</span></div>
+            </div>
+
+            <div id="card-area"></div>
+
+            <div id="jackpot-bar">
+                <div class="jackpot-slot jp-4k" data-jp="fourOfAKindA">
+                    <span class="jp-label">4K</span>
+                    <span class="jp-value" id="jp-4k-a-val">0</span>
+                </div>
+                <div class="jackpot-slot jp-fh" data-jp="fullHouse">
+                    <span class="jp-label">FH</span>
+                    <span class="jp-rank" id="jp-fh-rank">A</span>
+                    <span class="jp-value" id="jp-fh-val">0</span>
+                </div>
+                <div class="jackpot-slot jp-4k" data-jp="fourOfAKindB">
+                    <span class="jp-label">4K</span>
+                    <span class="jp-value" id="jp-4k-b-val">0</span>
+                </div>
+                <div class="jackpot-slot jp-sf" data-jp="straightFlush">
+                    <span class="jp-label">SF</span>
+                    <span class="jp-value" id="jp-sf-val">0</span>
+                </div>
+            </div>
+
+            <div id="du-info-panel">
+                <div id="du-info-left">
+                    <div id="du-label">HI LO GAMBLE</div>
+                    <div id="du-ace-info">ACE ALWAYS WINS</div>
+                </div>
+            </div>
+
+            <div id="info-bar">
+                <div id="game-message">INSERT COIN</div>
+            </div>
+
+            <div id="bonus-bar">
+                <div id="bonus-text"></div>
+            </div>
+
+            <div id="lucky5-flash"></div>
+
+            <div id="controls">
+                <div id="hold-row">
+                    <button class="cab-btn cab-hold" data-index="0" disabled>HOLD</button>
+                    <button class="cab-btn cab-hold" data-index="1" disabled>HOLD</button>
+                    <button class="cab-btn cab-hold" data-index="2" disabled>HOLD</button>
+                    <button class="cab-btn cab-hold" data-index="3" disabled>HOLD</button>
+                    <button class="cab-btn cab-hold" data-index="4" disabled>HOLD</button>
+                </div>
+                <div id="action-row">
+                    <button class="cab-btn cab-big" id="btn-big" disabled>BIG</button>
+                    <button class="cab-btn cab-small" id="btn-small" disabled>SMALL</button>
+                    <button class="cab-btn cab-cancel" id="btn-cancel" disabled>CANCEL<br>HOLD</button>
+                    <button class="cab-btn cab-deal" id="btn-deal" disabled>DEAL<br>DRAW</button>
+                    <button class="cab-btn cab-bet" id="btn-bet">BET</button>
+                </div>
+                <div id="bottom-row">
+                    <button class="cab-btn cab-takehalf" id="btn-take-half" disabled>TAKE<br>HALF</button>
+                    <button class="cab-btn cab-menu" id="btn-menu">&#9776;</button>
+                    <button class="cab-btn cab-takescore" id="btn-take-score" disabled>TAKE<br>SCORE</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/game.js"></script>
+</body>
+</html>
