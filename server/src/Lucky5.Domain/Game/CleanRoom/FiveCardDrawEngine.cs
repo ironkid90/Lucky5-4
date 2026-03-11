@@ -2,12 +2,13 @@ namespace Lucky5.Domain.Game.CleanRoom;
 
 public static class FiveCardDrawEngine
 {
+    private static readonly char[] Suits = ['C', 'D', 'H', 'S'];
+
     public static CleanRoomCard[] BuildStandardDeck()
     {
         var deck = new List<CleanRoomCard>(52);
-        var suits = new[] { 'C', 'D', 'H', 'S' };
 
-        foreach (var suit in suits)
+        foreach (var suit in Suits)
         {
             for (var rank = 2; rank <= 14; rank++)
             {
@@ -20,19 +21,18 @@ public static class FiveCardDrawEngine
 
     public static CleanRoomCard[] ShuffleDeck(ulong seed, string stream = "deck", IEnumerable<CleanRoomCard>? deck = null)
     {
-        var derivedSeed = DeterministicSeed.Derive(seed, "shuffle", stream);
-        var rng = new SplitMix64Rng(derivedSeed);
-        var workingDeck = (deck ?? BuildStandardDeck()).ToList();
+        var workingDeck = deck?.ToList() ?? BuildStandardDeck().ToList();
+        var rng = new SplitMix64Rng(DeterministicSeed.Derive(seed, stream));
         rng.Shuffle(workingDeck);
         return workingDeck.ToArray();
     }
 
     public static FiveCardDrawState DealFiveCardDraw(ulong seed, string stream = "hand")
     {
-        var roundSeed = DeterministicSeed.Derive(seed, "five-card-draw", stream);
-        var deck = ShuffleDeck(roundSeed, "opening");
+        var seedToken = DeterministicSeed.Derive(seed, stream);
+        var deck = ShuffleDeck(seedToken, "cards");
         var hand = deck.Take(5).ToArray();
-        return FiveCardDrawState.Create(roundSeed, deck, hand);
+        return FiveCardDrawState.Create(seedToken, deck, hand);
     }
 
     public static FiveCardDrawState Reduce(FiveCardDrawState state, RoundAction action)
@@ -242,7 +242,7 @@ public static class FiveCardDrawEngine
             return (false, 0);
         }
 
-        var isWheel = uniqueRanks.SequenceEqual(new[] { 2, 3, 4, 5, 14 });
+        var isWheel = uniqueRanks.SequenceEqual([2, 3, 4, 5, 14]);
         if (isWheel)
         {
             return (true, 5);
