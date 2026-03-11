@@ -162,25 +162,6 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
         }
 
         var profile = RequireProfile(userId);
-        if (profile.WalletBalance < round.BetAmount)
-        {
-            throw new InvalidOperationException("Insufficient balance for draw");
-        }
-
-        profile.WalletBalance -= round.BetAmount;
-        lock (LedgerLock)
-        {
-            var ledger = RequireMachineLedger(round.MachineId);
-            ledger.CapitalIn += round.BetAmount;
-        }
-        store.Ledger.Add(new WalletLedgerEntry
-        {
-            UserId = userId,
-            Amount = -round.BetAmount,
-            BalanceAfter = profile.WalletBalance,
-            Type = "DrawBet",
-            Reference = round.RoundId.ToString("N")
-        });
 
         var holdMask = new bool[5];
         foreach (var idx in request.HoldIndexes)
