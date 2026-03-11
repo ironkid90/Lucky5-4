@@ -249,7 +249,7 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
                 {
                     ledger.RoundsSinceMediumWin = 0;
                 }
-                ledger.CooldownRoundsRemaining = MachinePolicy.ComputeCooldownLength(evaluation.Category);
+                ledger.CooldownRoundsRemaining = MachinePolicy.ComputeCooldownLength(evaluation.Category, round.RoundEntropySeed);
 
                 if (evaluation.Category == HandCategory.FullHouse && evaluation.Tiebreak[0] == ledger.JackpotFullHouseRank)
                 {

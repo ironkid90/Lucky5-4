@@ -11,16 +11,16 @@ public sealed class SplitMix64Rng
 
     public SplitMix64Rng(ulong seed)
     {
-        _state = seed == 0 ? 0x9E3779B97F4A7C15UL : seed;
+        _state = seed;
     }
 
     public ulong NextUInt64()
     {
         _state += 0x9E3779B97F4A7C15UL;
-        var z = _state;
-        z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9UL;
-        z = (z ^ (z >> 27)) * 0x94D049BB133111EBUL;
-        return z ^ (z >> 31);
+        var value = _state;
+        value = (value ^ (value >> 30)) * 0xBF58476D1CE4E5B9UL;
+        value = (value ^ (value >> 27)) * 0x94D049BB133111EBUL;
+        return value ^ (value >> 31);
     }
 
     public int NextInt(int maxExclusive)
@@ -36,12 +36,12 @@ public sealed class SplitMix64Rng
         }
 
         var bound = (ulong)maxExclusive;
-        var limit = (ulong.MaxValue / bound) * bound;
+        var threshold = unchecked(0UL - bound) % bound;
 
         while (true)
         {
             var value = NextUInt64();
-            if (value < limit)
+            if (value >= threshold)
             {
                 return (int)(value % bound);
             }
@@ -52,6 +52,8 @@ public sealed class SplitMix64Rng
 
     public void Shuffle<T>(IList<T> values)
     {
+        ArgumentNullException.ThrowIfNull(values);
+
         for (var index = values.Count - 1; index > 0; index--)
         {
             var swapIndex = NextInt(index + 1);
