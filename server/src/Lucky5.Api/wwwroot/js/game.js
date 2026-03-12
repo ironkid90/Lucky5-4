@@ -465,11 +465,31 @@ async function doSwitchDealer() {
         winAmount = result.currentAmount;
         duDealerCard = result.dealerCard;
 
+        const isLucky5 = result.status === 'Lucky5';
+        if (isLucky5) {
+            triggerLucky5Flash();
+        }
+
         renderDoubleUpCards(duDealerCard, true, null);
-        showMessage(`SWITCHED - WIN: ${formatNum(result.currentAmount)} (${duSwitchesRemaining} left)`, 'win');
+        if (isLucky5) {
+            showMessage(`5\u2660 LUCKY 5 ACTIVE! WIN: ${formatNum(result.currentAmount)}`, 'win');
+        } else {
+            showMessage(`SWITCHED - WIN: ${formatNum(result.currentAmount)} (${duSwitchesRemaining} left)`, 'win');
+        }
         setButtonStates();
     } catch (e) {
         showMessage(e.message, 'lose');
+    }
+}
+
+function triggerLucky5Flash() {
+    const banner = document.getElementById('lucky5-banner');
+    if (banner) banner.classList.add('active');
+    const flash = document.getElementById('lucky5-flash');
+    if (flash) {
+        flash.classList.remove('active');
+        void flash.offsetWidth;
+        flash.classList.add('active');
     }
 }
 
@@ -879,7 +899,12 @@ async function startDoubleUpFlow() {
         gameState = 'doubleup';
 
         showDuInfo();
-        showMessage(`DOUBLE UP - WIN: ${formatNum(result.currentAmount)}`, 'win');
+        if (result.isNoLoseActive) {
+            triggerLucky5Flash();
+            showMessage(`5\u2660 LUCKY 5 ACTIVE! DOUBLE UP: ${formatNum(result.currentAmount)}`, 'win');
+        } else {
+            showMessage(`DOUBLE UP - WIN: ${formatNum(result.currentAmount)}`, 'win');
+        }
         updateWinAmountDisplay(result.currentAmount, active4kSlot === 0 ? 'A' : 'B');
         updateWinIndicator(result.currentAmount);
         if (currentHandRank) highlightPaytableDU(currentHandRank, result.currentAmount);
@@ -924,6 +949,7 @@ async function doDoubleUp(guess) {
                     }
                 }, 900);
             } else if (result.status === 'SafeFail') {
+                triggerLucky5Flash();
                 winAmount = result.currentAmount;
                 balance = result.walletBalance - winAmount;
                 updateCredits();
@@ -965,6 +991,8 @@ function exitDoubleUp() {
     duIsNoLoseActive = false;
     duDealerCard = null;
     $('#lucky5-flash').classList.remove('active');
+    const banner = document.getElementById('lucky5-banner');
+    if (banner) banner.classList.remove('active');
     updateWinAmountDisplay(0);
 
     if (winAmount > 0) {
@@ -1046,6 +1074,10 @@ async function mainTakeScore() {
     stopShuffle();
     hideDuInfo();
     duSessionStarted = false;
+    const bannerEl = document.getElementById('lucky5-banner');
+    if (bannerEl) bannerEl.classList.remove('active');
+    const flashEl = document.getElementById('lucky5-flash');
+    if (flashEl) flashEl.classList.remove('active');
 
     const amount = winAmount;
     winAmount = 0;
@@ -1095,6 +1127,10 @@ async function mainTakeHalf() {
             stopShuffle();
             hideDuInfo();
             duSessionStarted = false;
+            const b = document.getElementById('lucky5-banner');
+            if (b) b.classList.remove('active');
+            const f = document.getElementById('lucky5-flash');
+            if (f) f.classList.remove('active');
             currentHandRank = null;
             gameState = 'idle';
             setButtonStates();

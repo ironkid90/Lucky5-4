@@ -592,8 +592,16 @@ body {
     letter-spacing: 3px;
     min-height: 16px;
     flex-shrink: 0;
-    animation: neon-blink 1.5s ease-in-out infinite;
     text-shadow: 0 0 8px rgba(0,255,255,0.8), 0 0 16px rgba(0,255,255,0.4);
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+#lucky5-banner.active {
+    visibility: visible;
+    opacity: 1;
+    animation: neon-blink 1.5s ease-in-out infinite;
 }
 
 @keyframes neon-blink {
@@ -1011,9 +1019,10 @@ body {
 }
 
 @keyframes lucky5-screen-flash {
-    0% { background: rgba(255,215,0,0.8); }
-    30% { background: rgba(255,255,255,0.6); }
-    60% { background: rgba(255,215,0,0.3); }
+    0% { background: rgba(255,255,255,0.9); }
+    15% { background: rgba(255,215,0,0.7); }
+    40% { background: rgba(255,215,0,0.3); }
+    70% { background: rgba(0,255,255,0.1); }
     100% { background: transparent; }
 }
 

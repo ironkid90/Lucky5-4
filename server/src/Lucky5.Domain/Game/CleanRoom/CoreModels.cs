@@ -149,7 +149,7 @@ public sealed record PaytableProfile(
         new Dictionary<HandCategory, int>
         {
             [HandCategory.RoyalFlush] = 1000,
-            [HandCategory.StraightFlush] = 750,
+            [HandCategory.StraightFlush] = 75,
             [HandCategory.FourOfAKind] = 15,
             [HandCategory.FullHouse] = 12,
             [HandCategory.Flush] = 10,
