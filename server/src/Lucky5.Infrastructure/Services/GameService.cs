@@ -314,19 +314,7 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
 
         var totalWin = payout + jackpotWon;
         round.WinAmount = totalWin;
-        profile.WalletBalance += totalWin;
-
-        if (totalWin > 0)
-        {
-            store.Ledger.Add(new WalletLedgerEntry
-            {
-                UserId = userId,
-                Amount = totalWin,
-                BalanceAfter = profile.WalletBalance,
-                Type = jackpotWon > 0 ? "JackpotWin" : "Win",
-                Reference = round.RoundId.ToString("N")
-            });
-        }
+        round.OriginalWinAmount = totalWin;
 
         JackpotInfoDto jackpots;
         lock (LedgerLock)
@@ -538,9 +526,40 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
         var profile = RequireProfile(userId);
         var cashoutAmount = round.DoubleUpSession != null ? round.DoubleUpSession.CurrentAmount : (int)round.WinAmount;
 
+        if (round.IsPayoutSettled)
+        {
+            return Task.FromResult(new DoubleUpResultDto(
+                roundId,
+                "Cashout",
+                0,
+                profile.WalletBalance));
+        }
+
         if (round.DoubleUpSession != null && !round.DoubleUpSession.IsTerminal)
         {
             FinalizeDoubleUp(round, profile, cashoutAmount);
+        }
+        else if (round.DoubleUpSession == null)
+        {
+            profile.WalletBalance += cashoutAmount;
+            round.IsPayoutSettled = true;
+            var ledgerDelta = cashoutAmount - round.OriginalWinAmount;
+            if (ledgerDelta != 0)
+            {
+                lock (LedgerLock)
+                {
+                    var ledger = RequireMachineLedger(round.MachineId);
+                    ledger.CapitalOut += ledgerDelta;
+                }
+            }
+            store.Ledger.Add(new WalletLedgerEntry
+            {
+                UserId = userId,
+                Amount = cashoutAmount,
+                BalanceAfter = profile.WalletBalance,
+                Type = "Cashout",
+                Reference = round.RoundId.ToString("N")
+            });
         }
 
         return Task.FromResult(new DoubleUpResultDto(
@@ -569,11 +588,14 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
         var remaining = currentAmount - half;
 
         profile.WalletBalance += half;
-        round.WinAmount = remaining;
 
         if (round.DoubleUpSession != null)
         {
             round.DoubleUpSession = round.DoubleUpSession with { CurrentAmount = remaining };
+        }
+        else
+        {
+            round.WinAmount = remaining;
         }
 
         lock (LedgerLock)
@@ -685,13 +707,11 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
 
     private void FinalizeDoubleUp(GameRound round, MemberProfile profile, int cashoutCredits)
     {
-        var previousWin = round.WinAmount;
-        var walletDelta = cashoutCredits - previousWin;
-        profile.WalletBalance += walletDelta;
+        profile.WalletBalance += cashoutCredits;
         if (profile.WalletBalance < 0) profile.WalletBalance = 0;
-        round.WinAmount = cashoutCredits;
+        round.IsPayoutSettled = true;
 
-        var ledgerDelta = cashoutCredits - previousWin;
+        var ledgerDelta = cashoutCredits - round.OriginalWinAmount;
         if (ledgerDelta != 0)
         {
             lock (LedgerLock)
@@ -704,7 +724,7 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
         store.Ledger.Add(new WalletLedgerEntry
         {
             UserId = round.UserId,
-            Amount = walletDelta,
+            Amount = cashoutCredits,
             BalanceAfter = profile.WalletBalance,
             Type = cashoutCredits > 0 ? "DoubleUpCashout" : "DoubleUpLoss",
             Reference = round.RoundId.ToString("N")

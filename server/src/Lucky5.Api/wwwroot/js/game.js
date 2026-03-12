@@ -705,7 +705,7 @@ async function doDeal() {
             });
             cards = result.cards;
             winAmount = result.winAmount;
-            balance = result.walletBalanceAfterRound - winAmount;
+            balance = result.walletBalanceAfterRound;
             if (result.jackpots) updateJackpotDisplay(result.jackpots);
             updateCredits();
 
@@ -951,7 +951,7 @@ async function doDoubleUp(guess) {
             } else if (result.status === 'SafeFail') {
                 triggerLucky5Flash();
                 winAmount = result.currentAmount;
-                balance = result.walletBalance - winAmount;
+                balance = result.walletBalance;
                 updateCredits();
                 updateWinIndicator(winAmount);
                 updateWinAmountDisplay(winAmount, active4kSlot === 0 ? 'A' : 'B');
@@ -960,7 +960,7 @@ async function doDoubleUp(guess) {
                 setTimeout(() => exitDoubleUp(), 1200);
             } else if (result.status === 'MachineClosed') {
                 winAmount = result.currentAmount;
-                balance = result.walletBalance - winAmount;
+                balance = result.walletBalance;
                 updateCredits();
                 updateWinIndicator(winAmount);
                 updateWinAmountDisplay(winAmount, active4kSlot === 0 ? 'A' : 'B');
@@ -1113,10 +1113,6 @@ async function mainTakeHalf() {
 
     try {
         const result = await apiCall('POST', '/api/Game/double-up/take-half', { roundId });
-        const half = Math.floor(winAmount / 2);
-        const preBalance = balance;
-
-        await animateDrainToCredits(half, preBalance);
 
         balance = result.walletBalance;
         updateCredits();
