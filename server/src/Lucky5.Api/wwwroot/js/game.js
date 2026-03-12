@@ -799,7 +799,6 @@ async function doDoubleUp(guess) {
 
             if (result.status === 'Win') {
                 winAmount = result.currentAmount;
-                balance = result.walletBalance - winAmount;
                 updateCredits();
                 updateWinIndicator(winAmount);
                 updateWinAmountDisplay(winAmount, active4kSlot === 0 ? 'A' : 'B');
