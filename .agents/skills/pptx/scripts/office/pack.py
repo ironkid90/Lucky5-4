@@ -153,7 +153,120 @@ if __name__ == "__main__":
         original_file=args.original,
         validate=args.validate,
     )
+    
     print(message)
 
     if "Error" in message:
         sys.exit(1)
+type Msg = {
+  role: "system" | "user" | "assistant" | "tool";
+  content: string | any[];
+  tool_call_id?: string;
+  tool_calls?: any[];
+};
+
+const MAX_REQUEST_BYTES = 3_500_000; // headroom under platform hard limit
+
+const bytes = (obj: unknown) =>
+  new TextEncoder().encode(JSON.stringify(obj)).length;
+
+function compactContent(content: Msg["content"], maxText = 8000) {
+  if (typeof content === "string") {
+    return content.length > maxText
+      ? content.slice(0, maxText) + "\n...[truncated]"
+      : content;
+  }
+
+  if (Array.isArray(content)) {
+    return content.map((part) => {
+      if (part?.type === "text" && typeof part.text === "string") {
+        return {
+          ...part,
+          text:
+            part.text.length > maxText
+              ? part.text.slice(0, maxText) + "\n...[truncated]"
+              : part.text,
+        };
+      }
+
+      // Prevent huge base64 image payloads
+      if (
+        part?.type === "image_url" &&
+        typeof part?.image_url?.url === "string" &&
+        part.image_url.url.startsWith("data:")
+      ) {
+        return {
+          ...part,
+          image_url: {
+            ...part.image_url,
+            url: "[data-url-removed-upload-image-and-use-https-url]",
+          },
+        };
+      }
+
+      return part;
+    });
+  }
+
+  return content;
+}
+
+function buildSafePayload(input: {
+  model: string;
+  messages: Msg[];
+  tools?: any[];
+  stream?: boolean;
+  max_tokens?: number;
+  temperature?: number;
+}) {
+  const payload: any = {
+    model: input.model,
+    stream: input.stream ?? true,
+    max_tokens: input.max_tokens ?? 1000,
+    temperature: input.temperature ?? 0.2,
+    tools: input.tools?.slice(0, 8), // cap oversized tool schema lists
+    messages: input.messages.map((m) => ({
+      ...m,
+      content: compactContent(m.content),
+    })),
+  };
+
+  // Drop oldest non-system messages until size fits
+  while (bytes(payload) > MAX_REQUEST_BYTES && payload.messages.length > 2) {
+    const idx = payload.messages.findIndex(
+      (m: Msg, i: number) => i > 0 && m.role !== "system"
+    );
+    if (idx === -1) break;
+    payload.messages.splice(idx, 1);
+  }
+
+  // Last-resort truncation of newest message
+  if (bytes(payload) > MAX_REQUEST_BYTES) {
+    const last = payload.messages[payload.messages.length - 1];
+    if (typeof last?.content === "string") {
+      last.content = last.content.slice(0, 2000) + "\n...[hard-truncated]";
+    }
+  }
+
+  if (bytes(payload) > MAX_REQUEST_BYTES) {
+    throw new Error("payload-too-large-after-compaction");
+  }
+
+  return payload;
+}
+
+// usage
+const payload = buildSafePayload({
+  model: "anthropic/claude-sonnet-4.5",
+  messages,
+  tools,
+});
+
+await fetch("https://api.kilo.ai/api/gateway/chat/completions", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${process.env.KILO_API_KEY}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify(payload),
+});
