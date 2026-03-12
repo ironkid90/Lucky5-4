@@ -19,7 +19,7 @@ public sealed class MachinePolicyState
     public decimal CreditsIn { get; set; }
     public decimal CreditsOut { get; set; }
     public decimal BaseCreditsOut { get; set; }
-    public decimal TargetRtp { get; set; } = 0.90m;
+    public decimal TargetRtp { get; set; } = 0.875m;
     public int RoundCount { get; set; }
 
     public int ConsecutiveLosses { get; set; }

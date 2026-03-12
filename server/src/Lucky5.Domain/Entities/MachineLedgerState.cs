@@ -3,7 +3,7 @@ namespace Lucky5.Domain.Entities;
 public sealed class MachineLedgerState
 {
     public int MachineId { get; init; }
-    public decimal TargetRtp { get; set; } = 0.90m;
+    public decimal TargetRtp { get; set; } = 0.875m;
     public decimal CapitalIn { get; set; }
     public decimal CapitalOut { get; set; }
     public int RoundCount { get; set; }

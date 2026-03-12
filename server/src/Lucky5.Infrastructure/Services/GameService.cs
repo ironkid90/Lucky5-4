@@ -161,7 +161,46 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
             throw new InvalidOperationException("Clean-room state not initialized");
         }
 
+        if (round.CleanRoomState.Phase != RoundPhase.Dealt)
+        {
+            throw new InvalidOperationException("Draw already completed for this round");
+        }
+
         var profile = RequireProfile(userId);
+
+        if (profile.WalletBalance < round.BetAmount)
+        {
+            throw new InvalidOperationException("Not enough credits for draw");
+        }
+
+        profile.WalletBalance -= round.BetAmount;
+        lock (LedgerLock)
+        {
+            var ledger = RequireMachineLedger(round.MachineId);
+            ledger.CapitalIn += round.BetAmount;
+
+            var jackpotContribution = round.BetAmount * 0.01m;
+            var bucket1 = decimal.Floor(jackpotContribution / 3m * 100m) / 100m;
+            var bucket2 = bucket1;
+            var bucket3 = jackpotContribution - bucket1 - bucket2;
+
+            if (ledger.ActiveFourOfAKindSlot == 0)
+                ledger.JackpotFourOfAKindA = Math.Min(ledger.JackpotFourOfAKindA + bucket1, 999_999);
+            else
+                ledger.JackpotFourOfAKindB = Math.Min(ledger.JackpotFourOfAKindB + bucket1, 999_999);
+
+            ledger.JackpotFullHouse += bucket2;
+            ledger.JackpotStraightFlush = Math.Min(ledger.JackpotStraightFlush + bucket3, 20_000_000);
+        }
+
+        store.Ledger.Add(new WalletLedgerEntry
+        {
+            UserId = userId,
+            Amount = -round.BetAmount,
+            BalanceAfter = profile.WalletBalance,
+            Type = "DrawBet",
+            Reference = round.RoundId.ToString("N")
+        });
 
         var holdMask = new bool[5];
         foreach (var idx in request.HoldIndexes)
@@ -324,7 +363,7 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
         }
 
         var profile = RequireProfile(userId);
-        var machineCreditBaseline = 0;
+        var machineCreditBaseline = (int)Math.Min(profile.WalletBalance, int.MaxValue);
 
         var alteredDeck = FiveCardDrawEngine.BuildStandardDeck();
         if (round.PolicyMode == PolicyDistributionMode.Cold)

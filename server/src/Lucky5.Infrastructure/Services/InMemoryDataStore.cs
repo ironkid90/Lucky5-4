@@ -13,10 +13,10 @@ public sealed class InMemoryDataStore
                 MachineId = machine.Id,
                 TargetRtp = machine.Id switch
                 {
-                    1 => 0.90m,
-                    2 => 0.90m,
-                    3 => 0.90m,
-                    _ => 0.90m
+                    1 => 0.875m,
+                    2 => 0.875m,
+                    3 => 0.875m,
+                    _ => 0.875m
                 }
             };
         }

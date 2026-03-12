@@ -531,10 +531,11 @@ body {
 
 .du-card-slot {
     position: relative;
-    width: 22%;
-    max-width: 120px;
+    width: 17%;
+    max-width: 100px;
     aspect-ratio: 2/3;
     text-align: center;
+    flex-shrink: 0;
 }
 
 .du-card-slot .du-card-label {
@@ -543,6 +544,24 @@ body {
     letter-spacing: 1px;
     margin-bottom: 2px;
     height: 14px;
+    font-weight: bold;
+}
+
+.du-card-slot .du-card-label.du-label-big {
+    color: #ff4444;
+}
+
+.du-card-slot .du-card-label.du-label-small {
+    color: #44aaff;
+}
+
+.du-page-indicator {
+    position: absolute;
+    bottom: 2px;
+    right: 8px;
+    font-size: 9px;
+    color: #666;
+    letter-spacing: 1px;
 }
 
 .du-card-slot .du-card-frame {
