@@ -488,7 +488,7 @@ export function Lucky5Cabinet() {
                 <strong>{openRoundId ? `Round ${openRoundId.slice(0, 8)}` : "No active round"}</strong>
               </div>
               <span className="hint">
-                {dealResult && !drawResult ? "Tap HOLD under each card, then DRAW." : "DEAL opens a new five-card round."}
+                {dealResult && !drawResult ? "Press HOLD buttons below to hold cards, then DRAW." : "DEAL opens a new five-card round."}
               </span>
             </div>
 
@@ -532,6 +532,7 @@ export function Lucky5Cabinet() {
                       key={index}
                       className={`hold-button ${holdIndexes.includes(index) ? "active" : ""}`}
                       type="button"
+                      aria-label={holdIndexes.includes(index) ? `Held card ${index + 1}` : `Hold card ${index + 1}`}
                       onClick={() => toggleHold(index)}
                       disabled={!dealResult || !!drawResult || busy}
                     >
