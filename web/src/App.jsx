@@ -1,19 +1,19 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
+import './App.css'
 
 const SUITS = ['♠', '♥', '♦', '♣']
 const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
-const SUIT_COLORS = { '♠': '#e0e0e0', '♥': '#ff3355', '♦': '#ff3355', '♣': '#e0e0e0' }
 
 const PAYTABLE = [
-  { name: '5 OF A KIND', label: 'LUCKY 5 / SUPER BONUS', mult: 500 },
-  { name: 'ROYAL FLUSH', label: 'ROYAL FLUSH', mult: 100 },
-  { name: 'STRAIGHT FLUSH', label: 'STRAIGHT FLUSH', mult: 75 },
-  { name: '4 OF A KIND', label: '4 OF A KIND', mult: 20 },
-  { name: 'FULL HOUSE', label: 'FULL HOUSE', mult: 12 },
-  { name: 'FLUSH', label: 'FLUSH', mult: 7 },
-  { name: 'STRAIGHT', label: 'STRAIGHT', mult: 5 },
-  { name: '3 OF A KIND', label: '3 OF A KIND', mult: 3 },
-  { name: '2 PAIR', label: '2 PAIR', mult: 1 },
+  { name: '5 OF A KIND', label: 'LUCKY 5 / SUPER BONUS', mult: 500, color: '#FF00FF' },
+  { name: 'ROYAL FLUSH', label: 'ROYAL FLUSH', mult: 100, color: '#FF3333' },
+  { name: 'STRAIGHT FLUSH', label: 'STRAIGHT FLUSH', mult: 75, color: '#3399FF' },
+  { name: '4 OF A KIND', label: '4 OF A KIND', mult: 20, color: '#FFFF00' },
+  { name: 'FULL HOUSE', label: 'FULL HOUSE', mult: 12, color: '#FFFFFF' },
+  { name: 'FLUSH', label: 'FLUSH', mult: 7, color: '#00CCCC' },
+  { name: 'STRAIGHT', label: 'STRAIGHT', mult: 5, color: '#33CC33' },
+  { name: '3 OF A KIND', label: '3 OF A KIND', mult: 3, color: '#6699FF' },
+  { name: '2 PAIR', label: '2 PAIR', mult: 1, color: '#CC99FF' },
 ]
 
 const STAKES = [1, 2, 5, 10, 20, 50]
@@ -76,75 +76,67 @@ function evaluateHand(cards) {
   return null
 }
 
-function CardFace({ card, held, onClick, index, phase }) {
+function CardFace({ card, held, onClick, phase, doubleUpLabel }) {
   const isEmpty = !card
   const isBack = phase === PHASES.IDLE
 
   if (isEmpty || isBack) {
     return (
-      <div
-        onClick={onClick}
-        className="relative w-[60px] h-[88px] sm:w-[72px] sm:h-[104px] md:w-[90px] md:h-[130px] rounded-md border-2 border-cyan-800 flex items-center justify-center cursor-pointer select-none overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, #0c1a2e 0%, #0a0e1a 50%, #0c1a2e 100%)',
-          boxShadow: '0 0 8px rgba(0,255,255,0.15), inset 0 0 15px rgba(0,0,0,0.5)',
-        }}
-      >
-        <div className="absolute inset-1 border border-cyan-900/50 rounded-sm" />
-        <div className="text-cyan-700 text-lg md:text-2xl font-bold opacity-60">★</div>
-        {held && (
-          <div className="absolute -bottom-0 left-0 right-0 bg-yellow-400 text-black text-[7px] sm:text-[8px] md:text-[9px] text-center font-bold py-0.5 tracking-wider">
-            HELD
+      <div className="flex flex-col items-center gap-0.5">
+        <div
+          onClick={onClick}
+          className="card-back relative cursor-pointer select-none overflow-hidden"
+        >
+          <div className="absolute inset-[3px] border border-blue-400/20 rounded-sm" />
+          <div className="flex items-center justify-center h-full">
+            <div className="text-blue-300 text-2xl font-bold opacity-40">★</div>
+          </div>
+          {held && (
+            <div className="absolute bottom-0 left-0 right-0 bg-yellow-400 text-black text-[8px] text-center font-bold py-0.5 tracking-wider led-text">
+              HELD
+            </div>
+          )}
+        </div>
+        {doubleUpLabel && (
+          <div className="text-[10px] led-text tracking-wider font-bold" style={{ color: '#00FF00', textShadow: '0 0 6px #00FF00' }}>
+            {doubleUpLabel}
           </div>
         )}
       </div>
     )
   }
 
-  const color = SUIT_COLORS[card.suit]
   const isRed = card.suit === '♥' || card.suit === '♦'
+  const suitColor = isRed ? '#CC0000' : '#000000'
 
   return (
-    <div
-      onClick={onClick}
-      className={`relative w-[60px] h-[88px] sm:w-[72px] sm:h-[104px] md:w-[90px] md:h-[130px] rounded-md border-2 flex flex-col items-center justify-between p-1 sm:p-1.5 md:p-2 cursor-pointer select-none transition-all duration-150 ${
-        held
-          ? 'border-yellow-400 shadow-[0_0_12px_rgba(250,204,21,0.5)]'
-          : 'border-gray-500 hover:border-cyan-400'
-      }`}
-      style={{
-        background: held
-          ? 'linear-gradient(180deg, #1a1a0a 0%, #111108 100%)'
-          : 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)',
-        boxShadow: held
-          ? '0 0 15px rgba(250,204,21,0.3), inset 0 1px 0 rgba(255,255,255,0.05)'
-          : '0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)',
-      }}
-    >
-      <div className="self-start leading-none">
-        <div className="text-xs sm:text-sm md:text-base font-bold" style={{ color, textShadow: `0 0 6px ${color}40` }}>
-          {card.rank}
-        </div>
-        <div className="text-[10px] sm:text-xs md:text-sm" style={{ color }}>{card.suit}</div>
-      </div>
-
+    <div className="flex flex-col items-center gap-0.5">
       <div
-        className="text-xl sm:text-2xl md:text-4xl"
-        style={{ color, textShadow: `0 0 10px ${color}60`, filter: isRed ? 'saturate(1.3)' : 'none' }}
+        onClick={onClick}
+        className={`card-traditional relative cursor-pointer select-none overflow-hidden ${held ? 'card-held-ring' : ''}`}
       >
-        {card.suit}
-      </div>
-
-      <div className="self-end leading-none rotate-180">
-        <div className="text-xs sm:text-sm md:text-base font-bold" style={{ color, textShadow: `0 0 6px ${color}40` }}>
-          {card.rank}
+        <div className="flex flex-col h-full p-1.5">
+          <div className="leading-none">
+            <div className="text-base font-bold" style={{ color: suitColor }}>{card.rank}</div>
+            <div className="text-sm -mt-0.5" style={{ color: suitColor }}>{card.suit}</div>
+          </div>
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-4xl" style={{ color: suitColor }}>{card.suit}</div>
+          </div>
+          <div className="self-end leading-none rotate-180">
+            <div className="text-base font-bold" style={{ color: suitColor }}>{card.rank}</div>
+            <div className="text-sm -mt-0.5" style={{ color: suitColor }}>{card.suit}</div>
+          </div>
         </div>
-        <div className="text-[10px] sm:text-xs md:text-sm" style={{ color }}>{card.suit}</div>
+        {held && (
+          <div className="absolute bottom-0 left-0 right-0 bg-yellow-400 text-black text-[9px] text-center font-bold py-0.5 tracking-wider led-text">
+            HELD
+          </div>
+        )}
       </div>
-
-      {held && (
-        <div className="absolute -bottom-0 left-0 right-0 bg-yellow-400 text-black text-[7px] sm:text-[8px] md:text-[9px] text-center font-bold py-0.5 tracking-wider">
-          HELD
+      {doubleUpLabel && (
+        <div className="text-[10px] led-text tracking-wider font-bold" style={{ color: '#00FF00', textShadow: '0 0 6px #00FF00' }}>
+          {doubleUpLabel}
         </div>
       )}
     </div>
@@ -154,64 +146,49 @@ function CardFace({ card, held, onClick, index, phase }) {
 function ArcadeButton({ label, color, onClick, disabled, className = '', circular = false }) {
   const colorMap = {
     yellow: {
-      bg: 'linear-gradient(180deg, #fbbf24 0%, #b45309 100%)',
-      border: '#92400e',
-      text: '#1c1917',
-      glow: 'rgba(251,191,36,0.4)',
-      highlight: '#fde68a',
-    },
-    orange: {
-      bg: 'linear-gradient(180deg, #fb923c 0%, #c2410c 100%)',
-      border: '#9a3412',
-      text: '#fff',
-      glow: 'rgba(251,146,60,0.4)',
-      highlight: '#fed7aa',
+      bg: 'linear-gradient(180deg, #FFD700 0%, #CC8800 50%, #AA6600 100%)',
+      border: '#885500',
+      text: '#1a1000',
+      shadow: '#664400',
+      highlight: 'rgba(255,255,200,0.4)',
     },
     red: {
-      bg: 'linear-gradient(180deg, #ef4444 0%, #991b1b 100%)',
-      border: '#7f1d1d',
-      text: '#fff',
-      glow: 'rgba(239,68,68,0.4)',
-      highlight: '#fca5a5',
+      bg: 'linear-gradient(180deg, #FF4422 0%, #CC2200 50%, #991100 100%)',
+      border: '#771100',
+      text: '#FFFFFF',
+      shadow: '#550000',
+      highlight: 'rgba(255,150,130,0.3)',
     },
     green: {
-      bg: 'linear-gradient(180deg, #22c55e 0%, #15803d 100%)',
-      border: '#14532d',
-      text: '#fff',
-      glow: 'rgba(34,197,94,0.4)',
-      highlight: '#86efac',
-    },
-    white: {
-      bg: 'linear-gradient(180deg, #e5e7eb 0%, #9ca3af 100%)',
-      border: '#6b7280',
-      text: '#1f2937',
-      glow: 'rgba(229,231,235,0.3)',
-      highlight: '#f9fafb',
+      bg: 'linear-gradient(180deg, #33CC33 0%, #228B22 50%, #116611 100%)',
+      border: '#004400',
+      text: '#FFFFFF',
+      shadow: '#003300',
+      highlight: 'rgba(150,255,150,0.3)',
     },
     black: {
-      bg: 'linear-gradient(180deg, #374151 0%, #111827 100%)',
-      border: '#030712',
-      text: '#d1d5db',
-      glow: 'rgba(55,65,81,0.4)',
-      highlight: '#6b7280',
+      bg: 'linear-gradient(180deg, #444 0%, #222 50%, #111 100%)',
+      border: '#000',
+      text: '#CCC',
+      shadow: '#000',
+      highlight: 'rgba(100,100,100,0.3)',
     },
   }
 
-  const scheme = colorMap[color] || colorMap.white
+  const scheme = colorMap[color] || colorMap.yellow
 
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`relative font-bold tracking-wider select-none transition-all duration-75 active:translate-y-0.5 active:scale-[0.97] ${
-        disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:brightness-110'
-      } ${circular ? 'rounded-full w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14' : 'rounded-md'} ${className}`}
+      className={`arcade-btn ${circular ? 'circular' : ''} ${className}`}
       style={{
+        '--btn-border': scheme.border,
         background: scheme.bg,
         border: `3px solid ${scheme.border}`,
         color: scheme.text,
-        boxShadow: `0 4px 0 ${scheme.border}, 0 6px 12px rgba(0,0,0,0.5), inset 0 1px 0 ${scheme.highlight}`,
-        textShadow: color === 'black' || color === 'white' ? 'none' : '0 1px 2px rgba(0,0,0,0.3)',
+        boxShadow: `0 4px 0 ${scheme.shadow}, 0 6px 10px rgba(0,0,0,0.6), inset 0 1px 0 ${scheme.highlight}`,
+        textShadow: color !== 'black' ? '0 1px 2px rgba(0,0,0,0.4)' : 'none',
         fontSize: 'inherit',
       }}
     >
@@ -337,190 +314,182 @@ function App() {
   const dealLabel = phase === PHASES.HOLD ? 'DRAW' : 'DEAL'
 
   return (
-    <div
-      className="min-h-screen min-h-[100dvh] flex flex-col items-center bg-black text-white overflow-hidden relative"
-      style={{
-        backgroundImage: 'radial-gradient(ellipse at center, #0a0a1a 0%, #000000 70%)',
-      }}
-    >
-      <div
-        className="pointer-events-none fixed inset-0 z-50 opacity-[0.03]"
-        style={{
-          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,255,0.03) 2px, rgba(0,255,255,0.03) 4px)',
-        }}
-      />
+    <div className="arcade-cabinet">
 
-      <div className="w-full max-w-2xl mx-auto flex flex-col h-screen h-[100dvh] px-2 sm:px-3 md:px-4 py-2 sm:py-3">
+      <div className="crt-screen crt-area">
+        <div className="crt-content">
 
-        <div className="flex gap-2 sm:gap-3 mb-2 sm:mb-3 flex-shrink-0">
-
-          <div className="flex-1 border border-cyan-800/60 rounded-md p-1.5 sm:p-2 md:p-3 bg-black/80 overflow-hidden">
-            <div className="text-[7px] sm:text-[8px] md:text-[9px] text-cyan-400 tracking-[0.2em] mb-1 sm:mb-1.5 border-b border-cyan-900/50 pb-1"
-              style={{ textShadow: '0 0 8px rgba(0,255,255,0.5)' }}>
-              ★ PAYTABLE ★
-            </div>
-            <div className="space-y-0">
+          <div className="paytable-section">
+            <div className="paytable-hands">
               {PAYTABLE.map((row, i) => (
                 <div
                   key={row.name}
-                  className={`flex justify-between items-center py-[1px] sm:py-[2px] transition-all duration-300 px-0.5 rounded-sm ${
-                    highlightRow === i
-                      ? 'bg-yellow-400/20 scale-[1.02]'
-                      : ''
-                  }`}
+                  className={`paytable-row ${highlightRow === i ? 'highlighted' : ''}`}
                 >
                   <span
-                    className={`text-[6px] sm:text-[7px] md:text-[8px] tracking-wide truncate mr-1 ${
-                      highlightRow === i ? 'text-yellow-300' : 'text-cyan-300'
-                    }`}
-                    style={highlightRow === i ? { textShadow: '0 0 8px rgba(250,204,21,0.6)' } : {}}
+                    className="paytable-label led-text"
+                    style={{
+                      color: highlightRow === i ? '#FFFF00' : row.color,
+                      textShadow: highlightRow === i ? '0 0 8px #FFFF00' : `0 0 4px ${row.color}60`,
+                    }}
                   >
                     {row.label}
                   </span>
                   <span
-                    className={`text-[6px] sm:text-[7px] md:text-[8px] font-bold tabular-nums whitespace-nowrap ${
-                      highlightRow === i ? 'text-yellow-200' : 'text-white/90'
-                    }`}
+                    className="paytable-value led-text"
+                    style={{
+                      color: highlightRow === i ? '#FFFF00' : '#CCCCCC',
+                      textShadow: highlightRow === i ? '0 0 8px #FFFF00' : 'none',
+                    }}
                   >
                     {row.mult * stake}
                   </span>
                 </div>
               ))}
             </div>
-          </div>
 
-          <div className="w-24 sm:w-28 md:w-32 flex flex-col gap-1.5 sm:gap-2 flex-shrink-0">
-            <div className="border border-blue-700/60 rounded-md p-1.5 sm:p-2 md:p-3 bg-black/80 text-center">
-              <div className="text-[7px] sm:text-[8px] md:text-[9px] text-blue-400 tracking-[0.2em] mb-0.5"
-                style={{ textShadow: '0 0 8px rgba(59,130,246,0.5)' }}>
-                CREDIT
+            <div className="credit-stake-panel">
+              <div className="credit-display">
+                <div className="cs-label led-text" style={{ color: '#3399FF', textShadow: '0 0 6px #3399FF' }}>
+                  CREDIT
+                </div>
+                <div className="cs-value led-text" style={{ color: '#00FF00', textShadow: '0 0 8px #00FF00' }}>
+                  {credit}
+                </div>
               </div>
-              <div className="text-sm sm:text-lg md:text-xl text-white font-bold tabular-nums"
-                style={{ textShadow: '0 0 10px rgba(255,255,255,0.3)' }}>
-                {credit}
-              </div>
-            </div>
-            <div className="border border-blue-700/60 rounded-md p-1.5 sm:p-2 md:p-3 bg-black/80 text-center">
-              <div className="text-[7px] sm:text-[8px] md:text-[9px] text-blue-400 tracking-[0.2em] mb-0.5"
-                style={{ textShadow: '0 0 8px rgba(59,130,246,0.5)' }}>
-                STAKE
-              </div>
-              <div className="text-sm sm:text-lg md:text-xl text-white font-bold tabular-nums"
-                style={{ textShadow: '0 0 10px rgba(255,255,255,0.3)' }}>
-                {stake}
+              <div className="stake-display">
+                <div className="cs-label led-text" style={{ color: '#FF3333', textShadow: '0 0 6px #FF3333' }}>
+                  STAKE
+                </div>
+                <div className="cs-value led-text" style={{ color: '#00FF00', textShadow: '0 0 8px #00FF00' }}>
+                  {stake}
+                </div>
               </div>
             </div>
           </div>
+
+          <div className="cards-section">
+            <div className="cards-row">
+              {cards.map((card, i) => (
+                <CardFace
+                  key={i}
+                  card={card}
+                  held={held[i]}
+                  phase={phase}
+                  onClick={() => handleHold(i)}
+                  doubleUpLabel={phase === PHASES.PAYOUT ? (i === 1 ? 'SMALL' : i === 3 ? 'BIG' : null) : null}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="info-section">
+            <div className="info-stats led-text">
+              <span>DOUBLE UP</span>
+              <span>SERIE</span>
+            </div>
+            <div className="info-numbers led-text">
+              <span>{credit}</span>
+              <span>×</span>
+              <span>{stake}</span>
+            </div>
+            <div
+              className={`result-message led-text ${result ? 'result-flash' : ''}`}
+              style={{
+                color: result ? (result.color || '#FFFF00') : '#00FF00',
+                textShadow: result
+                  ? `0 0 10px ${result.color || '#FFFF00'}, 0 0 20px ${result.color || '#FFFF00'}`
+                  : '0 0 6px #00FF00',
+              }}
+            >
+              {result ? (
+                <>
+                  <span className="result-hand">{result.name}</span>
+                  <span className="result-bonus">WINS BONUS</span>
+                </>
+              ) : (
+                message
+              )}
+            </div>
+          </div>
         </div>
+      </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center min-h-0">
-
-          <div className="flex gap-1.5 sm:gap-2 md:gap-3 justify-center mb-1 sm:mb-2">
-            {cards.map((card, i) => (
-              <CardFace
-                key={i}
-                card={card}
-                held={held[i]}
-                index={i}
-                phase={phase}
-                onClick={() => handleHold(i)}
-              />
-            ))}
-          </div>
-
-          <div
-            className={`text-[7px] sm:text-[8px] md:text-[10px] tracking-[0.15em] text-center px-2 py-1.5 sm:py-2 rounded-md transition-all duration-300 min-h-[24px] flex items-center justify-center ${
-              result
-                ? 'text-yellow-300 animate-pulse'
-                : 'text-cyan-400'
-            }`}
-            style={{
-              textShadow: result
-                ? '0 0 12px rgba(250,204,21,0.6)'
-                : '0 0 8px rgba(0,255,255,0.4)',
-            }}
-          >
-            {message}
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-1.5 sm:gap-2 flex-shrink-0 pb-1 sm:pb-2">
-
-          <div className="flex gap-1 sm:gap-1.5 md:gap-2 justify-center text-[7px] sm:text-[8px] md:text-[9px]">
-            {[0, 1, 2, 3, 4].map(i => (
-              <ArcadeButton
-                key={i}
-                label={held[i] ? 'HELD' : 'HOLD'}
-                color="yellow"
-                onClick={() => handleHold(i)}
-                disabled={phase !== PHASES.HOLD}
-                className="w-[60px] h-[30px] sm:w-[72px] sm:h-[34px] md:w-[90px] md:h-[38px] text-[7px] sm:text-[8px] md:text-[9px]"
-              />
-            ))}
-          </div>
-
-          <div className="flex gap-1 sm:gap-1.5 md:gap-2 justify-center text-[7px] sm:text-[8px] md:text-[9px]">
+      <div className="wood-panel button-area">
+        <div className="button-row hold-row">
+          {[0, 1, 2, 3, 4].map(i => (
             <ArcadeButton
-              label="BIG"
-              color="orange"
-              onClick={() => {}}
-              disabled={phase !== PHASES.PAYOUT}
-              className="flex-1 h-[32px] sm:h-[36px] md:h-[40px] max-w-[80px] sm:max-w-[90px] md:max-w-[100px]"
-            />
-            <ArcadeButton
-              label="SMALL"
-              color="orange"
-              onClick={() => {}}
-              disabled={phase !== PHASES.PAYOUT}
-              className="flex-1 h-[32px] sm:h-[36px] md:h-[40px] max-w-[80px] sm:max-w-[90px] md:max-w-[100px]"
-            />
-            <ArcadeButton
-              label="CANCEL"
-              color="white"
-              onClick={handleCancelHold}
+              key={i}
+              label={held[i] ? 'HELD' : 'HOLD'}
+              color="yellow"
+              onClick={() => handleHold(i)}
               disabled={phase !== PHASES.HOLD}
-              className="flex-1 h-[32px] sm:h-[36px] md:h-[40px] max-w-[80px] sm:max-w-[90px] md:max-w-[100px]"
+              className="hold-btn"
             />
-            <ArcadeButton
-              label={dealLabel}
-              color="red"
-              onClick={handleDeal}
-              disabled={false}
-              className="flex-1 h-[32px] sm:h-[36px] md:h-[40px] max-w-[80px] sm:max-w-[90px] md:max-w-[100px]"
-            />
-            <ArcadeButton
-              label="BET"
-              color="green"
-              onClick={handleBet}
-              disabled={phase !== PHASES.IDLE}
-              className="flex-1 h-[32px] sm:h-[36px] md:h-[40px] max-w-[80px] sm:max-w-[90px] md:max-w-[100px]"
-            />
-          </div>
+          ))}
+        </div>
 
-          <div className="flex gap-1.5 sm:gap-2 md:gap-3 justify-center items-center text-[7px] sm:text-[8px] md:text-[9px]">
-            <ArcadeButton
-              label="TAKE HALF"
-              color="red"
-              onClick={handleTakeHalf}
-              disabled={phase !== PHASES.PAYOUT || !result}
-              className="h-[32px] sm:h-[36px] md:h-[40px] px-3 sm:px-4 md:px-5"
-            />
-            <ArcadeButton
-              label="☰"
-              color="black"
-              onClick={() => {}}
-              disabled={false}
-              circular
-              className="text-base sm:text-lg md:text-xl"
-            />
-            <ArcadeButton
-              label="TAKE SCORE"
-              color="orange"
-              onClick={handleTakeScore}
-              disabled={phase !== PHASES.PAYOUT || !result}
-              className="h-[32px] sm:h-[36px] md:h-[40px] px-3 sm:px-4 md:px-5"
-            />
-          </div>
+        <div className="button-row action-row">
+          <ArcadeButton
+            label="BIG"
+            color="yellow"
+            onClick={() => {}}
+            disabled={phase !== PHASES.PAYOUT}
+            className="action-btn"
+          />
+          <ArcadeButton
+            label="SMALL"
+            color="yellow"
+            onClick={() => {}}
+            disabled={phase !== PHASES.PAYOUT}
+            className="action-btn"
+          />
+          <ArcadeButton
+            label={<>CANCEL<br/>HOLD</>}
+            color="yellow"
+            onClick={handleCancelHold}
+            disabled={phase !== PHASES.HOLD}
+            className="action-btn action-btn-text-sm"
+          />
+          <ArcadeButton
+            label={<>DEAL<br/>DRAW</>}
+            color="red"
+            onClick={handleDeal}
+            disabled={false}
+            className="action-btn action-btn-text-sm"
+          />
+          <ArcadeButton
+            label="BET"
+            color="green"
+            onClick={handleBet}
+            disabled={phase !== PHASES.IDLE}
+            className="action-btn"
+          />
+        </div>
+
+        <div className="button-row bottom-row">
+          <ArcadeButton
+            label={<>TAKE<br/>HALF</>}
+            color="red"
+            onClick={handleTakeHalf}
+            disabled={phase !== PHASES.PAYOUT || !result}
+            className="bottom-btn action-btn-text-sm"
+          />
+          <ArcadeButton
+            label="☰"
+            color="black"
+            onClick={() => {}}
+            disabled={false}
+            circular
+            className="menu-btn"
+          />
+          <ArcadeButton
+            label={<>TAKE<br/>SCORE</>}
+            color="red"
+            onClick={handleTakeScore}
+            disabled={phase !== PHASES.PAYOUT || !result}
+            className="bottom-btn action-btn-text-sm"
+          />
         </div>
       </div>
     </div>
