@@ -250,6 +250,22 @@ function cardImagePath(card) {
     return `/assets/images/cards/${card.code}.png`;
 }
 
+function showIdleTitle() {
+    const area = $('#card-area');
+    area.innerHTML = '';
+    area.classList.remove('du-mode');
+    const title = document.createElement('div');
+    title.className = 'idle-title';
+    title.innerHTML = '<span class="idle-lucky">LUCKY</span><span class="idle-poker">POKER</span>';
+    area.appendChild(title);
+}
+
+function hideIdleTitle() {
+    const area = $('#card-area');
+    const title = area.querySelector('.idle-title');
+    if (title) title.remove();
+}
+
 function renderCards(cardData, animate) {
     const area = $('#card-area');
     area.innerHTML = '';
@@ -542,6 +558,7 @@ async function doDeal() {
         updateBonusBar(null);
         updateWinIndicator(0);
         hideDuInfo();
+        hideIdleTitle();
 
         try {
             const result = await apiCall('POST', '/api/Game/cards/deal', {
@@ -572,6 +589,7 @@ async function doDeal() {
             showMessage(e.message, 'lose');
             gameState = 'idle';
             setButtonStates();
+            showIdleTitle();
         }
     } else if (gameState === 'hold') {
         if (balance < currentBet) {
@@ -641,6 +659,9 @@ async function doDeal() {
                     setButtonStates();
                     updatePaytable();
                     updateWinAmountDisplay(0);
+                    setTimeout(() => {
+                        if (gameState === 'idle') showIdleTitle();
+                    }, 2000);
                 }
             }, 500);
         } catch (e) {
@@ -832,7 +853,7 @@ function exitDoubleUp() {
         gameState = 'win';
         setButtonStates();
         showMessage(`WIN: ${formatNum(winAmount)} - TAKE OR DOUBLE`, 'win');
-        renderCards([null, null, null, null, null], false);
+        showIdleTitle();
     } else {
         currentHandRank = null;
         gameState = 'idle';
@@ -841,7 +862,7 @@ function exitDoubleUp() {
         updateBonusBar(null);
         updateWinIndicator(0);
         showMessage('PLACE YOUR BET');
-        renderCards([null, null, null, null, null], false);
+        showIdleTitle();
     }
 }
 
@@ -899,7 +920,7 @@ async function mainTakeScore() {
     updateBonusBar(null);
     updateWinAmountDisplay(0);
     currentHandRank = null;
-    renderCards([null, null, null, null, null], false);
+    showIdleTitle();
 
     try {
         const result = await apiCall('POST', '/api/Game/double-up/cashout', { roundId });
@@ -948,7 +969,7 @@ async function mainTakeHalf() {
             updateBonusBar(null);
             updateWinAmountDisplay(0);
             showMessage('PLACE YOUR BET');
-            renderCards([null, null, null, null, null], false);
+            showIdleTitle();
         } else {
             showMessage(`${formatNum(winAmount)} REMAINS - DOUBLE UP!`, 'win');
             if (currentHandRank) highlightPaytableDU(currentHandRank, winAmount);
@@ -1057,7 +1078,7 @@ async function initGame() {
         gameState = 'idle';
         setButtonStates();
 
-        renderCards([null, null, null, null, null], false);
+        showIdleTitle();
 
         try {
             const machineState = await apiCall('GET', `/api/Game/machine/${machineId}/state`);

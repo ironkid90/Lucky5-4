@@ -613,6 +613,13 @@ body {
     text-shadow: 0 0 6px rgba(0,255,0,0.3);
 }
 
+#du-lucky-info {
+    color: #FFD700;
+    font-size: 10px;
+    text-shadow: 0 0 6px rgba(255,215,0,0.3);
+    letter-spacing: 0.5px;
+}
+
 /* ─── Info Bar / Messages ─── */
 
 #info-bar {
@@ -934,4 +941,40 @@ body {
 @keyframes jp-glow {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.65; }
+}
+
+.idle-title {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    animation: idle-title-pulse 2.5s ease-in-out infinite;
+}
+
+.idle-lucky {
+    font-family: 'Arcade', monospace;
+    font-size: 38px;
+    color: #4488ff;
+    text-shadow:
+        0 0 12px rgba(68,136,255,0.8),
+        0 0 24px rgba(68,136,255,0.4),
+        2px 2px 0 #1a3366;
+    letter-spacing: 8px;
+}
+
+.idle-poker {
+    font-family: 'Arcade', monospace;
+    font-size: 32px;
+    color: #FFD700;
+    text-shadow:
+        0 0 12px rgba(255,215,0,0.8),
+        0 0 24px rgba(255,215,0,0.4),
+        2px 2px 0 #8B6914;
+    letter-spacing: 6px;
+}
+
+@keyframes idle-title-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.75; transform: scale(1.03); }
 }

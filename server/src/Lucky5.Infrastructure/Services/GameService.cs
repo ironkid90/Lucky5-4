@@ -13,7 +13,7 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
     private static readonly Dictionary<string, decimal> Rules = new(StringComparer.OrdinalIgnoreCase)
     {
         ["RoyalFlush"] = 1000,
-        ["StraightFlush"] = 75,
+        ["StraightFlush"] = 750,
         ["FourOfAKind"] = 15,
         ["FullHouse"] = 12,
         ["Flush"] = 10,
