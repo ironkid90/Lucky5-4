@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Lucky 5 - Video Poker</title>
-    <link rel="stylesheet" href="/css/game.css">
+    <link rel="stylesheet" href="/css/game.css?v=3">
     <link rel="icon" href="/assets/images/coin.png">
 </head>
 <body>
@@ -110,28 +110,31 @@
 
             <div id="controls">
                 <div id="hold-row">
-                    <button class="cab-btn cab-hold" data-index="0" disabled>HOLD</button>
-                    <button class="cab-btn cab-hold" data-index="1" disabled>HOLD</button>
-                    <button class="cab-btn cab-hold" data-index="2" disabled>HOLD</button>
-                    <button class="cab-btn cab-hold" data-index="3" disabled>HOLD</button>
-                    <button class="cab-btn cab-hold" data-index="4" disabled>HOLD</button>
+                    <button class="cab-btn cab-hold" data-index="0" disabled></button>
+                    <button class="cab-btn cab-hold" data-index="1" disabled></button>
+                    <button class="cab-btn cab-hold" data-index="2" disabled></button>
+                    <button class="cab-btn cab-hold" data-index="3" disabled></button>
+                    <button class="cab-btn cab-hold" data-index="4" disabled></button>
                 </div>
                 <div id="action-row">
-                    <button class="cab-btn cab-big" id="btn-big" disabled>BIG</button>
-                    <button class="cab-btn cab-small" id="btn-small" disabled>SMALL</button>
-                    <button class="cab-btn cab-cancel" id="btn-cancel" disabled>CANCEL<br>HOLD</button>
-                    <button class="cab-btn cab-deal" id="btn-deal" disabled>DEAL<br>DRAW</button>
-                    <button class="cab-btn cab-bet" id="btn-bet">BET</button>
+                    <button class="cab-btn cab-big" id="btn-big" disabled></button>
+                    <button class="cab-btn cab-small" id="btn-small" disabled></button>
+                    <button class="cab-btn cab-cancel" id="btn-cancel" disabled></button>
+                    <button class="cab-btn cab-deal" id="btn-deal" disabled></button>
+                    <button class="cab-btn cab-bet" id="btn-bet"></button>
                 </div>
                 <div id="bottom-row">
-                    <button class="cab-btn cab-takehalf" id="btn-take-half" disabled>TAKE<br>HALF</button>
-                    <button class="cab-btn cab-menu" id="btn-menu">&#9776;</button>
-                    <button class="cab-btn cab-takescore" id="btn-take-score" disabled>TAKE<br>SCORE</button>
+                    <button class="cab-btn cab-takehalf" id="btn-take-half" disabled></button>
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+                        <button class="cab-btn cab-menu" id="btn-menu">&#9776;</button>
+                        <span style="font-family:'Arcade',monospace;font-size:8px;color:#aaa;letter-spacing:1px;">MENU</span>
+                    </div>
+                    <button class="cab-btn cab-takescore" id="btn-take-score" disabled></button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="/js/game.js"></script>
+    <script src="/js/game.js?v=3"></script>
 </body>
 </html>

@@ -277,7 +277,7 @@ function renderCards(cardData, animate) {
         if (holdIndexes.has(i)) slot.classList.add('held');
 
         if (animate) {
-            slot.classList.add('slide-in');
+            slot.classList.add('deal-in');
         }
 
         const badge = document.createElement('div');
@@ -288,19 +288,19 @@ function renderCards(cardData, animate) {
         cardImg.className = 'card-face';
         cardImg.innerHTML = `<img src="${cardImagePath(cardData[i])}" alt="card">`;
 
-        slot.appendChild(badge);
         slot.appendChild(cardImg);
+        slot.appendChild(badge);
 
         slot.addEventListener('click', () => toggleHold(i));
         area.appendChild(slot);
 
         if (animate) {
             setTimeout(() => {
-                slot.classList.remove('slide-in');
-                slot.classList.add('slide-in-done');
-            }, 80 + i * 120);
+                slot.classList.remove('deal-in');
+                slot.classList.add('deal-in-done');
+            }, 100 + i * 180);
         } else {
-            slot.classList.add('slide-in-done');
+            slot.classList.add('deal-in-done');
         }
     }
 }
@@ -603,23 +603,25 @@ async function doDeal() {
                 holdIndexes: Array.from(holdIndexes)
             });
             cards = result.cards;
-            balance = result.walletBalanceAfterRound;
             winAmount = result.winAmount;
+            balance = result.walletBalanceAfterRound - winAmount;
             if (result.jackpots) updateJackpotDisplay(result.jackpots);
             updateCredits();
 
             renderCards(cards, false);
             setTimeout(() => {
+                let dropDelay = 0;
                 $$('.card-slot').forEach((slot, i) => {
                     if (!holdIndexes.has(i)) {
-                        slot.classList.remove('slide-in-done');
-                        slot.classList.add('slide-in');
+                        slot.classList.remove('deal-in-done');
+                        slot.classList.add('deal-in');
                         setTimeout(() => {
                             const face = slot.querySelector('.card-face img');
                             if (face) face.src = cardImagePath(cards[i]);
-                            slot.classList.remove('slide-in');
-                            slot.classList.add('slide-in-done');
-                        }, 80 + i * 80);
+                            slot.classList.remove('deal-in');
+                            slot.classList.add('deal-in-done');
+                        }, 100 + dropDelay);
+                        dropDelay += 180;
                     }
                 });
             }, 60);
@@ -797,7 +799,7 @@ async function doDoubleUp(guess) {
 
             if (result.status === 'Win') {
                 winAmount = result.currentAmount;
-                balance = result.walletBalance;
+                balance = result.walletBalance - winAmount;
                 updateCredits();
                 updateWinIndicator(winAmount);
                 updateWinAmountDisplay(winAmount, active4kSlot === 0 ? 'A' : 'B');
@@ -816,7 +818,7 @@ async function doDoubleUp(guess) {
                 }, 900);
             } else if (result.status === 'SafeFail') {
                 winAmount = result.currentAmount;
-                balance = result.walletBalance;
+                balance = result.walletBalance - winAmount;
                 updateCredits();
                 updateWinIndicator(winAmount);
                 updateWinAmountDisplay(winAmount, active4kSlot === 0 ? 'A' : 'B');
@@ -825,7 +827,7 @@ async function doDoubleUp(guess) {
                 setTimeout(() => exitDoubleUp(), 1200);
             } else if (result.status === 'MachineClosed') {
                 winAmount = result.currentAmount;
-                balance = result.walletBalance;
+                balance = result.walletBalance - winAmount;
                 updateCredits();
                 updateWinIndicator(winAmount);
                 updateWinAmountDisplay(winAmount, active4kSlot === 0 ? 'A' : 'B');
@@ -933,12 +935,10 @@ async function mainTakeScore() {
 
     try {
         const result = await apiCall('POST', '/api/Game/double-up/cashout', { roundId });
-        const serverBalance = result.walletBalance;
         const cashoutAmount = result.currentAmount;
-        const startBal = serverBalance - cashoutAmount;
 
-        await animateDrainToCredits(cashoutAmount, startBal);
-        balance = serverBalance;
+        await animateDrainToCredits(cashoutAmount, balance);
+        balance = result.walletBalance;
         updateCredits();
     } catch (e) {
         balance += amount;
@@ -959,10 +959,9 @@ async function mainTakeHalf() {
         const result = await apiCall('POST', '/api/Game/double-up/take-half', { roundId });
         const half = Math.floor(winAmount / 2);
 
-        const startBal = result.walletBalance - half;
-        await animateDrainToCredits(half, startBal);
+        await animateDrainToCredits(half, balance);
 
-        balance = result.walletBalance;
+        balance = result.walletBalance - result.currentAmount;
         updateCredits();
         winAmount = result.currentAmount;
         updateWinIndicator(winAmount);
