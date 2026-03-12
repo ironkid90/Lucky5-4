@@ -50,6 +50,15 @@ pubspec.lock
 node_modules/
 .pnpm-store/
 
+# Capacitor / Android
+mobile/www/
+mobile/android/app/src/main/assets/public/
+mobile/android/.gradle/
+mobile/android/app/build/
+mobile/android/capacitor-cordova-android-plugins/build/
+mobile/env.json
+*.keystore
+
 # Python
 __pycache__/
 *.pyc

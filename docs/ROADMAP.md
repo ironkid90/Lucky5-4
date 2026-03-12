@@ -82,6 +82,18 @@ Exit criteria:
 
 - mobile client reaches web feature parity for the base game loop
 
+## Phase 7a: Android APK (Capacitor)
+
+- wrap the web cabinet in a Capacitor WebView for quick Android distribution
+- configure API URL for remote server connectivity
+- lock portrait orientation to match cabinet feel
+- generate signed release APK
+
+Exit criteria:
+
+- installable APK that connects to a deployed Lucky5 server and plays identically to the browser version
+- see `docs/ANDROID_BUILD.md` for build instructions
+
 ## Recommended Immediate Steps
 
 1. Create the engine package under `src/server/engine/` and port `analysis/clean_room_engine/poker_engine.py`.
