@@ -141,7 +141,9 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
             jackpots = SnapshotJackpots(ledgerSnap);
         }
 
-        return Task.FromResult(new DealResultDto(round.RoundId, cards.Select(ToDto).ToArray(), request.BetAmount, profile.WalletBalance, jackpots));
+        var advisedHolds = FiveCardDrawEngine.ComputeAdvisedHolds(hand);
+
+        return Task.FromResult(new DealResultDto(round.RoundId, cards.Select(ToDto).ToArray(), request.BetAmount, profile.WalletBalance, jackpots, advisedHolds));
     }
 
     public Task<DrawResultDto> DrawAsync(Guid userId, DrawRequest request, CancellationToken cancellationToken)

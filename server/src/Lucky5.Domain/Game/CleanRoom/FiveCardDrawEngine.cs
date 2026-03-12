@@ -230,6 +230,85 @@ public static class FiveCardDrawEngine
         };
     }
 
+    public static int[] ComputeAdvisedHolds(IReadOnlyList<CleanRoomCard> cards)
+    {
+        if (cards.Count != 5) return [];
+
+        var rankGroups = cards
+            .Select((c, i) => new { c.Rank, c.Suit, Index = i })
+            .GroupBy(x => x.Rank)
+            .Select(g => new { Rank = g.Key, Indexes = g.Select(x => x.Index).ToArray() })
+            .OrderByDescending(g => g.Indexes.Length)
+            .ThenByDescending(g => g.Rank)
+            .ToArray();
+
+        var suitGroups = cards
+            .Select((c, i) => new { c.Rank, c.Suit, Index = i })
+            .GroupBy(x => x.Suit)
+            .Select(g => new { Suit = g.Key, Items = g.ToArray() })
+            .ToArray();
+
+        var quads = rankGroups.Where(g => g.Indexes.Length == 4).ToArray();
+        if (quads.Length > 0)
+            return quads[0].Indexes.Order().ToArray();
+
+        var trips = rankGroups.Where(g => g.Indexes.Length == 3).ToArray();
+        var pairs = rankGroups.Where(g => g.Indexes.Length == 2).ToArray();
+
+        if (trips.Length > 0 && pairs.Length > 0)
+            return trips[0].Indexes.Concat(pairs[0].Indexes).Order().ToArray();
+
+        var flush5 = suitGroups.FirstOrDefault(g => g.Items.Length == 5);
+        if (flush5 != null)
+            return [0, 1, 2, 3, 4];
+
+        var sortedRanks = cards.Select(c => c.Rank).Distinct().Order().ToArray();
+        if (sortedRanks.Length == 5)
+        {
+            var isStraight = (sortedRanks[4] - sortedRanks[0] == 4) ||
+                sortedRanks.SequenceEqual([2, 3, 4, 5, 14]);
+            if (isStraight)
+                return [0, 1, 2, 3, 4];
+        }
+
+        if (trips.Length > 0)
+            return trips[0].Indexes.Order().ToArray();
+
+        if (pairs.Length >= 2)
+            return pairs[0].Indexes.Concat(pairs[1].Indexes).Order().ToArray();
+
+        var flush4 = suitGroups.FirstOrDefault(g => g.Items.Length == 4);
+        if (flush4 != null)
+            return flush4.Items.Select(x => x.Index).Order().ToArray();
+
+        var allCards = cards.Select((c, i) => new { c.Rank, Index = i }).ToArray();
+        var sorted = allCards.OrderBy(c => c.Rank).ToArray();
+        for (var i = 0; i <= sorted.Length - 4; i++)
+        {
+            var window4 = sorted.Skip(i).Take(4).ToArray();
+            var uRanks = window4.Select(c => c.Rank).Distinct().Order().ToArray();
+            if (uRanks.Length == 4 && (uRanks[3] - uRanks[0] <= 4))
+                return window4.Select(c => c.Index).Order().ToArray();
+        }
+        var ace = sorted.FirstOrDefault(c => c.Rank == 14);
+        if (ace != null)
+        {
+            var lowCards = sorted.Where(c => c.Rank >= 2 && c.Rank <= 5).Take(3).ToArray();
+            if (lowCards.Length >= 3)
+            {
+                var combo = new[] { ace }.Concat(lowCards).ToArray();
+                var uRanks = combo.Select(c => c.Rank).Distinct().ToArray();
+                if (uRanks.Length == 4)
+                    return combo.Select(c => c.Index).Order().ToArray();
+            }
+        }
+
+        if (pairs.Length == 1)
+            return pairs[0].Indexes.Order().ToArray();
+
+        return [];
+    }
+
     private static (bool IsStraight, int HighCard) DetectStraight(IEnumerable<int> ranks)
     {
         var uniqueRanks = ranks

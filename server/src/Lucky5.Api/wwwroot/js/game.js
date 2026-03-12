@@ -1,5 +1,5 @@
 const API = '';
-let token = null;
+let token = sessionStorage.getItem('lucky5_token') || null;
 let balance = 0;
 let currentBet = 5000;
 let machineId = 1;
@@ -25,6 +25,8 @@ let active4kSlot = 0;
 let machineSerial = 0;
 let machineSerie = 1;
 let machineKent = 1;
+let hubConnection = null;
+let machineJoined = false;
 
 const MACHINE_CREDIT_LIMIT = 50000000;
 
@@ -541,8 +543,27 @@ function applyAutoHold(cardList) {
     });
 }
 
+function applyServerAdvisedHolds(advisedArray) {
+    if (!advisedArray || advisedArray.length === 0) return;
+
+    holdIndexes = new Set(advisedArray);
+    const slots = $$('.card-slot');
+    const holdBtns = $$('.cab-hold');
+    advisedArray.forEach(i => {
+        if (slots[i]) slots[i].classList.add('held');
+        if (holdBtns[i]) holdBtns[i].classList.add('active');
+    });
+}
+
 async function doDeal() {
     if (gameState === 'idle') {
+        if (!machineJoined) {
+            await joinMachine(machineId);
+            if (!machineJoined) {
+                showMessage('MACHINE NOT READY - TRY AGAIN', 'lose');
+                return;
+            }
+        }
         if (balance < currentBet) {
             showMessage('NOT ENOUGH CREDITS', 'lose');
             return;
@@ -572,8 +593,14 @@ async function doDeal() {
             $$('.cab-hold').forEach(btn => btn.classList.remove('active'));
             gameState = 'hold';
 
+            const serverHolds = result.advisedHolds;
+
             setTimeout(() => {
-                applyAutoHold(cards);
+                if (serverHolds && serverHolds.length > 0) {
+                    applyServerAdvisedHolds(serverHolds);
+                } else {
+                    applyAutoHold(cards);
+                }
                 setButtonStates();
                 if (holdIndexes.size > 0) {
                     showMessage('AUTO-HOLD SUGGESTED - DRAW OR ADJUST');
@@ -957,10 +984,11 @@ async function mainTakeHalf() {
     try {
         const result = await apiCall('POST', '/api/Game/double-up/take-half', { roundId });
         const half = Math.floor(winAmount / 2);
+        const preBalance = balance;
 
-        await animateDrainToCredits(half, balance);
+        await animateDrainToCredits(half, preBalance);
 
-        balance = result.walletBalance - result.currentAmount;
+        balance = result.walletBalance;
         updateCredits();
         winAmount = result.currentAmount;
         updateWinIndicator(winAmount);
@@ -1041,6 +1069,95 @@ async function doVerifyOtp(username) {
     });
 }
 
+function storeToken(t) {
+    token = t;
+    sessionStorage.setItem('lucky5_token', t);
+}
+
+function clearToken() {
+    token = null;
+    sessionStorage.removeItem('lucky5_token');
+}
+
+async function setupSignalR() {
+    if (!token) return;
+    if (hubConnection) {
+        try { await hubConnection.stop(); } catch (_) {}
+    }
+    hubConnection = new signalR.HubConnectionBuilder()
+        .withUrl(`${API}/CarrePokerGameHub`, { accessTokenFactory: () => token })
+        .withAutomaticReconnect()
+        .build();
+
+    hubConnection.on('MachineStateUpdated', (state) => {
+        if (state && state.jackpots) {
+            updateJackpotDisplay(state.jackpots);
+        }
+    });
+
+    hubConnection.on('Error', (err) => {
+        console.error('SignalR error:', err);
+    });
+
+    hubConnection.onreconnected(async () => {
+        if (machineId > 0) {
+            try { await hubConnection.invoke('JoinMachine', machineId); } catch (_) {}
+        }
+    });
+
+    try {
+        await hubConnection.start();
+    } catch (e) {
+        console.error('SignalR connection failed:', e);
+    }
+}
+
+function isHubConnected() {
+    if (!hubConnection) return false;
+    if (typeof signalR !== 'undefined' && signalR.HubConnectionState) {
+        return hubConnection.state === signalR.HubConnectionState.Connected;
+    }
+    return hubConnection.state === 'Connected';
+}
+
+async function joinMachine(id) {
+    if (!isHubConnected()) return;
+    try {
+        await hubConnection.invoke('JoinMachine', id);
+        machineJoined = true;
+    } catch (e) {
+        console.error('JoinMachine failed:', e);
+        machineJoined = false;
+    }
+}
+
+async function leaveMachine(id) {
+    if (!isHubConnected()) return;
+    try {
+        await hubConnection.invoke('LeaveMachine', id);
+        machineJoined = false;
+    } catch (_) {}
+}
+
+async function doLogout() {
+    if (machineJoined && machineId > 0) {
+        await leaveMachine(machineId);
+    }
+    if (hubConnection) {
+        try { await hubConnection.stop(); } catch (_) {}
+        hubConnection = null;
+    }
+    machineJoined = false;
+    clearToken();
+    gameState = 'idle';
+    balance = 0;
+    winAmount = 0;
+    roundId = null;
+    $('#game-screen').classList.remove('active');
+    $('#auth-screen').style.display = '';
+    $('#auth-error').textContent = '';
+}
+
 async function addDemoCredits() {
     try {
         await apiCall('POST', '/api/Auth/UpdateCredit', {
@@ -1094,6 +1211,9 @@ async function initGame() {
             }
         } catch (e) {}
 
+        await setupSignalR();
+        await joinMachine(machineId);
+
     } catch (e) {
         showMessage('Error: ' + e.message, 'lose');
     }
@@ -1130,13 +1250,13 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             if (isLogin) {
                 const data = await doLogin(username, password);
-                token = data.tokens.accessToken;
+                storeToken(data.tokens.accessToken);
                 balance = data.profile.walletBalance;
             } else {
                 await doSignup(username, password);
                 await doVerifyOtp(username);
                 const data = await doLogin(username, password);
-                token = data.tokens.accessToken;
+                storeToken(data.tokens.accessToken);
                 balance = data.profile.walletBalance;
             }
             authScreen.style.display = 'none';
@@ -1186,4 +1306,29 @@ document.addEventListener('DOMContentLoaded', () => {
             doDoubleUp('Small');
         }
     });
+
+    const menuBtn = $('#btn-menu');
+    if (menuBtn) {
+        menuBtn.addEventListener('click', () => {
+            if (gameState === 'idle') {
+                doLogout();
+            }
+        });
+    }
+
+    window.addEventListener('beforeunload', () => {
+        if (machineJoined && isHubConnected() && machineId > 0) {
+            hubConnection.invoke('LeaveMachine', machineId).catch(() => {});
+        }
+    });
+
+    if (token) {
+        authScreen.style.display = 'none';
+        $('#game-screen').classList.add('active');
+        initGame().catch(() => {
+            clearToken();
+            authScreen.style.display = '';
+            $('#game-screen').classList.remove('active');
+        });
+    }
 });
