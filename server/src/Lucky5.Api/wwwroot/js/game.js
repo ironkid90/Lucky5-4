@@ -1111,8 +1111,8 @@ document.addEventListener('DOMContentLoaded', () => {
         $('#auth-title').textContent = isLogin ? 'LOGIN' : 'SIGN UP';
         authBtn.textContent = isLogin ? 'LOGIN' : 'SIGN UP';
         authToggle.innerHTML = isLogin
-            ? 'No account? <span>Sign Up</span>'
-            : 'Have account? <span>Login</span>';
+            ? '<span class="auth-toggle-label">NO ACCOUNT?</span> <span>SIGN UP</span>'
+            : '<span class="auth-toggle-label">HAVE ACCOUNT?</span> <span>LOGIN</span>';
         authError.textContent = '';
     });
 

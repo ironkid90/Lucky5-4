@@ -35,87 +35,173 @@ body {
     overflow: hidden;
 }
 
+@keyframes cardGlow {
+    0%, 100% { filter: drop-shadow(0 0 12px rgba(255,215,0,0.25)); }
+    50% { filter: drop-shadow(0 0 24px rgba(255,215,0,0.45)); }
+}
+@keyframes borderShimmer {
+    0% { border-color: #8B6914; }
+    50% { border-color: #c9a227; }
+    100% { border-color: #8B6914; }
+}
+@keyframes cabinetGlow {
+    0%, 100% { opacity: 0.10; }
+    50% { opacity: 0.16; }
+}
+
 #auth-screen {
     position: absolute;
     inset: 0;
-    background: rgba(0,0,0,0.97);
+    background: #000;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     z-index: 100;
+    overflow: hidden;
+}
+
+.auth-ambient {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 40%, rgba(139,105,20,0.08) 0%, transparent 55%);
+    pointer-events: none;
+}
+
+.auth-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 10;
 }
 
 #auth-screen .logo {
-    width: 180px;
-    margin-bottom: 24px;
+    width: 150px;
     image-rendering: pixelated;
+    animation: cardGlow 3s ease-in-out infinite;
+    margin-bottom: -8px;
+    position: relative;
+    z-index: 2;
 }
 
 #auth-screen .auth-box {
-    background: linear-gradient(180deg, rgba(40, 25, 10, 0.95), rgba(20, 12, 5, 0.98));
+    background: linear-gradient(180deg, rgba(45,28,12,0.97) 0%, rgba(15,8,2,0.99) 100%);
     border: 2px solid #8B6914;
-    border-radius: 12px;
-    padding: 28px;
-    width: 300px;
+    border-radius: 8px;
+    padding: 36px 32px 28px;
+    width: 320px;
     text-align: center;
-    box-shadow: 0 0 30px rgba(139,105,20,0.15), inset 0 1px 0 rgba(255,215,0,0.1);
+    position: relative;
+    box-shadow: 0 0 40px rgba(139,105,20,0.12), 0 0 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,215,0,0.08);
+    animation: borderShimmer 4s ease-in-out infinite;
+}
+
+.auth-box-inset {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    border: 1px solid rgba(139,105,20,0.15);
+    border-radius: 4px;
+    pointer-events: none;
 }
 
 #auth-screen .auth-box h2 {
     font-family: 'Arcade', monospace;
-    font-size: 16px;
+    font-size: 15px;
     color: #FFD700;
-    margin-bottom: 18px;
-    text-shadow: 0 0 10px rgba(255,215,0,0.5);
-    letter-spacing: 2px;
+    margin-bottom: 28px;
+    text-shadow: 0 0 12px rgba(255,215,0,0.4);
+    letter-spacing: 4px;
 }
 
 #auth-screen input {
     width: 100%;
-    padding: 11px 14px;
-    margin-bottom: 10px;
-    background: rgba(0,0,0,0.6);
-    border: 1px solid #444;
-    border-radius: 6px;
-    color: #0f0;
+    padding: 12px 0 10px 0;
+    margin-bottom: 20px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid #444;
+    color: #d4af37;
     font-family: monospace;
-    font-size: 13px;
-    transition: border-color 0.2s;
+    font-size: 14px;
+    letter-spacing: 1px;
+    transition: border-color 0.3s, color 0.3s;
+}
+
+#auth-screen input::placeholder {
+    color: #666;
+    font-family: 'Arcade', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
 }
 
 #auth-screen input:focus {
     outline: none;
-    border-color: #FFD700;
-    box-shadow: 0 0 8px rgba(255,215,0,0.2);
+    border-bottom-color: #FFD700;
+    color: #FFD700;
+}
+
+#auth-screen input:last-of-type,
+#auth-screen input[type="password"] {
+    margin-bottom: 28px;
 }
 
 .auth-btn {
     width: 100%;
-    padding: 12px;
-    background: linear-gradient(180deg, #FFD700, #B8860B);
+    padding: 14px;
+    background: linear-gradient(180deg, #FFD700 0%, #B8860B 100%);
     border: none;
-    border-radius: 6px;
-    color: #000;
+    border-radius: 4px;
+    color: #1a0f00;
     font-family: 'Arcade', monospace;
     font-size: 13px;
     cursor: pointer;
-    margin-bottom: 8px;
-    letter-spacing: 1px;
-    transition: filter 0.15s;
+    letter-spacing: 3px;
+    font-weight: bold;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(255,215,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2);
+    text-shadow: 0 1px 0 rgba(255,215,0,0.5);
+    margin-bottom: 0;
 }
 
-.auth-btn:hover { filter: brightness(1.15); }
+.auth-btn:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 4px 16px rgba(255,215,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+    transform: translateY(-1px);
+}
+
+.auth-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 4px rgba(255,215,0,0.15);
+}
 
 .auth-toggle {
-    color: #888;
-    font-size: 11px;
+    margin-top: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     cursor: pointer;
 }
 
+.auth-toggle .auth-toggle-label {
+    color: #666;
+    font-size: 10px;
+    font-family: 'Arcade', monospace;
+    letter-spacing: 1px;
+}
+
 .auth-toggle span {
-    color: #FFD700;
-    text-decoration: underline;
+    color: #d4af37;
+    font-size: 10px;
+    font-family: 'Arcade', monospace;
+    letter-spacing: 1px;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(212,175,55,0.4);
+    padding-bottom: 1px;
 }
 
 .auth-error {
@@ -123,6 +209,187 @@ body {
     font-size: 10px;
     margin-bottom: 6px;
     min-height: 14px;
+}
+
+/* --- Arcade Cabinet Ghost Background --- */
+.cabinet-ghost {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 420px;
+    height: 700px;
+    pointer-events: none;
+    animation: cabinetGlow 5s ease-in-out infinite;
+}
+
+.cab-g-marquee {
+    position: absolute;
+    top: 0;
+    left: 30px;
+    right: 30px;
+    height: 40px;
+    background: linear-gradient(180deg, #8B6914 0%, #5a4410 100%);
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 0 20px rgba(139,105,20,0.3);
+}
+
+.cab-g-screen {
+    position: absolute;
+    top: 38px;
+    left: 20px;
+    right: 20px;
+    height: 320px;
+    background: #0a0a0a;
+    border: 3px solid #8B6914;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.cab-g-paytable {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.cab-g-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Arcade', monospace;
+    font-size: 7px;
+    opacity: 0.9;
+    letter-spacing: 0.5px;
+}
+
+.cab-g-cards {
+    position: absolute;
+    top: 100px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+}
+
+.cab-g-card {
+    width: 50px;
+    height: 70px;
+    background: #fff;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: #000;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+.cab-g-card.cab-g-red {
+    color: #c00;
+}
+
+.cab-g-credits {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Arcade', monospace;
+    font-size: 8px;
+}
+
+.cab-g-panel {
+    position: absolute;
+    top: 365px;
+    left: 10px;
+    right: 10px;
+    height: 200px;
+    background: linear-gradient(180deg, #3d2815 0%, #2a1a0d 50%, #1f130a 100%);
+    border-radius: 0 0 4px 4px;
+    border: 2px solid #5a4410;
+    border-top: none;
+}
+
+.cab-g-holds {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    padding: 20px 15px 10px;
+}
+
+.cab-g-hbtn {
+    height: 30px;
+    background: linear-gradient(180deg, #c9a227, #8B6914);
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.cab-g-actions {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    padding: 0 15px 10px;
+}
+
+.cab-g-abtn {
+    height: 36px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+.cab-g-red-btn { background: linear-gradient(180deg, #e44, #a22); }
+.cab-g-gold-btn { background: linear-gradient(180deg, #c9a227, #8B6914); }
+.cab-g-green-btn { background: linear-gradient(180deg, #4a4, #282); }
+
+.cab-g-bottom {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding: 6px 15px;
+}
+
+.cab-g-bbtn {
+    width: 50px;
+    height: 30px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+
+.cab-g-menu-btn {
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(180deg, #333, #222);
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+
+.cab-g-base {
+    position: absolute;
+    top: 565px;
+    left: 40px;
+    right: 40px;
+    height: 120px;
+    background: linear-gradient(180deg, #2a1a0d 0%, #1a0f06 100%);
+    border-radius: 0 0 20px 20px;
+    border: 2px solid #3d2815;
+    border-top: none;
+}
+
+.cab-g-slot {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 8px;
+    background: #111;
+    border-radius: 4px;
+    border: 1px solid #333;
 }
 
 #game-screen {

@@ -4,22 +4,70 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Lucky 5 - Video Poker</title>
-    <link rel="stylesheet" href="/css/game.css?v=4">
+    <link rel="stylesheet" href="/css/game.css?v=5">
     <link rel="icon" href="/assets/images/coin.png">
 </head>
 <body>
     <div id="game-container">
         <div id="auth-screen">
-            <img class="logo" src="/assets/images/lucky5.png" alt="Lucky 5">
-            <div class="auth-box">
-                <h2 id="auth-title">LOGIN</h2>
-                <div id="auth-error" class="auth-error"></div>
-                <form id="auth-form" onsubmit="return false;">
-                    <input type="text" id="auth-username" placeholder="Username" autocomplete="off">
-                    <input type="password" id="auth-password" placeholder="Password">
-                    <button type="button" id="auth-submit" class="auth-btn">LOGIN</button>
-                </form>
-                <div id="auth-toggle" class="auth-toggle">No account? <span>Sign Up</span></div>
+            <div class="auth-ambient"></div>
+            <div class="cabinet-ghost">
+                <div class="cab-g-marquee"></div>
+                <div class="cab-g-screen">
+                    <div class="cab-g-paytable">
+                        <div class="cab-g-row" style="color:#f44"><span>ROYAL FLUSH</span><span>5,000,000</span></div>
+                        <div class="cab-g-row" style="color:#f80"><span>STRAIGHT FLUSH</span><span>375,000</span></div>
+                        <div class="cab-g-row" style="color:#0c0"><span>4 OF A KIND</span><span>75,000</span></div>
+                        <div class="cab-g-row" style="color:#ff0"><span>FULL HOUSE</span><span>60,000</span></div>
+                        <div class="cab-g-row" style="color:#08f"><span>FLUSH</span><span>50,000</span></div>
+                        <div class="cab-g-row" style="color:#0cc"><span>STRAIGHT</span><span>40,000</span></div>
+                        <div class="cab-g-row" style="color:#0c0"><span>3 OF A KIND</span><span>15,000</span></div>
+                        <div class="cab-g-row" style="color:#0cc"><span>2 PAIR</span><span>10,000</span></div>
+                    </div>
+                    <div class="cab-g-cards">
+                        <div class="cab-g-card">♠</div>
+                        <div class="cab-g-card cab-g-red">♥</div>
+                        <div class="cab-g-card">♣</div>
+                        <div class="cab-g-card cab-g-red">♦</div>
+                        <div class="cab-g-card">♠</div>
+                    </div>
+                    <div class="cab-g-credits">
+                        <span style="color:#0f0">CREDIT 121,200</span>
+                        <span style="color:#ff0">STAKE 5,000</span>
+                    </div>
+                </div>
+                <div class="cab-g-panel">
+                    <div class="cab-g-holds">
+                        <div class="cab-g-hbtn"></div><div class="cab-g-hbtn"></div><div class="cab-g-hbtn"></div><div class="cab-g-hbtn"></div><div class="cab-g-hbtn"></div>
+                    </div>
+                    <div class="cab-g-actions">
+                        <div class="cab-g-abtn cab-g-red-btn"></div>
+                        <div class="cab-g-abtn cab-g-red-btn"></div>
+                        <div class="cab-g-abtn cab-g-gold-btn"></div>
+                        <div class="cab-g-abtn cab-g-gold-btn"></div>
+                        <div class="cab-g-abtn cab-g-green-btn"></div>
+                    </div>
+                    <div class="cab-g-bottom">
+                        <div class="cab-g-bbtn cab-g-red-btn"></div>
+                        <div class="cab-g-bbtn cab-g-menu-btn"></div>
+                        <div class="cab-g-bbtn cab-g-red-btn"></div>
+                    </div>
+                </div>
+                <div class="cab-g-base"><div class="cab-g-slot"></div></div>
+            </div>
+            <div class="auth-content">
+                <img class="logo" src="/assets/images/lucky5.png" alt="Lucky 5">
+                <div class="auth-box">
+                    <div class="auth-box-inset"></div>
+                    <h2 id="auth-title">LOGIN</h2>
+                    <div id="auth-error" class="auth-error"></div>
+                    <form id="auth-form" onsubmit="return false;">
+                        <input type="text" id="auth-username" placeholder="USERNAME" autocomplete="off">
+                        <input type="password" id="auth-password" placeholder="PASSWORD">
+                        <button type="button" id="auth-submit" class="auth-btn">LOGIN</button>
+                    </form>
+                    <div id="auth-toggle" class="auth-toggle"><span class="auth-toggle-label">NO ACCOUNT?</span> <span>SIGN UP</span></div>
+                </div>
             </div>
         </div>
 
@@ -135,6 +183,6 @@
         </div>
     </div>
 
-    <script src="/js/game.js?v=4"></script>
+    <script src="/js/game.js?v=5"></script>
 </body>
 </html>
