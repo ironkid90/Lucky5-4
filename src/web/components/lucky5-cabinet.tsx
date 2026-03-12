@@ -35,17 +35,17 @@ const DEFAULT_USERNAME = "tester";
 const DEFAULT_PASSWORD = "password";
 const DEFAULT_OTP = "123456";
 
-const PAYTABLE_COLORS = [
-  "#ffffff",  // Royal Flush
-  "#ffd447",  // Straight Flush
-  "#84ff55",  // Four of a Kind
-  "#9ce6ff",  // Full House
-  "#c8d8ff",  // Flush
-  "#88aaff",  // Straight
-  "#dddddd",  // Three of a Kind
-  "#cc99ff",  // Two Pair
-  "#a89880",  // Jacks or Better / others
-];
+const PAYTABLE_COLORS: Record<string, string> = {
+  RoyalFlush:    "#ffffff",
+  StraightFlush: "#ffd447",
+  FourOfAKind:   "#84ff55",
+  FullHouse:     "#9ce6ff",
+  Flush:         "#c8d8ff",
+  Straight:      "#88aaff",
+  ThreeOfAKind:  "#dddddd",
+  TwoPair:       "#cc99ff",
+  JacksOrBetter: "#a89880",
+};
 
 type MessageTone = "ready" | "warning" | "danger";
 
@@ -413,8 +413,8 @@ export function Lucky5Cabinet() {
             <div className="paytable">
               <div className="paytable-title">Lucky5 payout glass</div>
               <div className="paytable-grid">
-                {payoutRows.map(([hand, payout], rowIndex) => {
-                  const rowColor = PAYTABLE_COLORS[rowIndex] ?? "#a89880";
+                {payoutRows.map(([hand, payout]) => {
+                  const rowColor = PAYTABLE_COLORS[hand] ?? "#a89880";
                   return (
                     <div
                       className="paytable-row"
