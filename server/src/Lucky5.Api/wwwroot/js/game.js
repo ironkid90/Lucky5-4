@@ -1,5 +1,7 @@
 const API = '';
 let token = sessionStorage.getItem('lucky5_token') || null;
+let currentUsername = sessionStorage.getItem('lucky5_username') || '';
+let currentRole = sessionStorage.getItem('lucky5_role') || 'player';
 let balance = 0;
 let currentBet = 5000;
 let machineId = 1;
@@ -1224,9 +1226,20 @@ function storeToken(t) {
     sessionStorage.setItem('lucky5_token', t);
 }
 
+function storeUserInfo(username, role) {
+    currentUsername = username;
+    currentRole = role || 'player';
+    sessionStorage.setItem('lucky5_username', currentUsername);
+    sessionStorage.setItem('lucky5_role', currentRole);
+}
+
 function clearToken() {
     token = null;
+    currentUsername = '';
+    currentRole = 'player';
     sessionStorage.removeItem('lucky5_token');
+    sessionStorage.removeItem('lucky5_username');
+    sessionStorage.removeItem('lucky5_role');
 }
 
 async function setupSignalR() {
@@ -1304,6 +1317,8 @@ async function doLogout() {
     winAmount = 0;
     roundId = null;
     $('#game-screen').classList.remove('active');
+    $('#lobby-screen').classList.remove('active');
+    $('#wallet-screen').classList.remove('active');
     $('#auth-screen').style.display = '';
     $('#auth-error').textContent = '';
 }
@@ -1321,6 +1336,215 @@ async function addDemoCredits() {
     } catch (e) {
         console.error('Failed to add credits:', e);
     }
+}
+
+const AVAILABLE_GAMES = [
+    {
+        id: 'lucky5',
+        name: 'LUCKY 5',
+        icon: '/assets/images/lucky5.png',
+        status: 'playable'
+    },
+    {
+        id: 'blackjack',
+        name: 'BLACKJACK',
+        iconText: '&#9824;',
+        status: 'coming-soon'
+    },
+    {
+        id: 'slots',
+        name: 'MEGA SLOTS',
+        iconText: '&#9733;',
+        status: 'coming-soon'
+    },
+    {
+        id: 'roulette',
+        name: 'ROULETTE',
+        iconText: '&#9679;',
+        status: 'coming-soon'
+    }
+];
+
+function updateLobbyBalance() {
+    const fmt = formatNum(balance);
+    const lobbyBal = document.getElementById('lobby-balance');
+    const lobbyWalBal = document.getElementById('lobby-wallet-bal');
+    const walletBal = document.getElementById('wallet-balance');
+    if (lobbyBal) lobbyBal.textContent = fmt;
+    if (lobbyWalBal) lobbyWalBal.textContent = fmt;
+    if (walletBal) walletBal.textContent = fmt;
+}
+
+function updateLobbyUsername() {
+    const el = document.getElementById('lobby-username');
+    if (el) el.textContent = currentUsername.toUpperCase() || 'PLAYER';
+}
+
+function renderGameGrid() {
+    const grid = document.getElementById('lobby-game-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    AVAILABLE_GAMES.forEach(game => {
+        const card = document.createElement('div');
+        card.className = 'game-card' + (game.status !== 'playable' ? ' unavailable' : '');
+
+        const iconDiv = document.createElement('div');
+        iconDiv.className = 'game-card-icon';
+        if (game.icon) {
+            iconDiv.innerHTML = `<img src="${game.icon}" alt="${game.name}">`;
+        } else {
+            iconDiv.innerHTML = game.iconText || '?';
+        }
+
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'game-card-name';
+        nameDiv.textContent = game.name;
+
+        const badge = document.createElement('div');
+        badge.className = 'game-card-badge ' + (game.status === 'playable' ? 'playable' : 'coming-soon');
+        badge.textContent = game.status === 'playable' ? 'PLAY NOW' : 'COMING SOON';
+
+        card.appendChild(iconDiv);
+        card.appendChild(nameDiv);
+        card.appendChild(badge);
+
+        if (game.status === 'playable') {
+            card.addEventListener('click', () => openGame(game.id));
+        }
+
+        grid.appendChild(card);
+    });
+}
+
+function openGame(gameId) {
+    if (gameId === 'lucky5') {
+        $('#lobby-screen').classList.remove('active');
+        $('#wallet-screen').classList.remove('active');
+        $('#game-screen').classList.add('active');
+        initGame();
+    }
+}
+
+function showLobby() {
+    $('#game-screen').classList.remove('active');
+    $('#wallet-screen').classList.remove('active');
+    $('#lobby-screen').classList.add('active');
+    updateLobbyBalance();
+    updateLobbyUsername();
+    renderGameGrid();
+    document.querySelectorAll('.lobby-nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('nav-lobby').classList.add('active');
+}
+
+function showWallet() {
+    $('#lobby-screen').classList.remove('active');
+    $('#game-screen').classList.remove('active');
+    $('#wallet-screen').classList.add('active');
+    updateLobbyBalance();
+    loadWalletHistory();
+    document.querySelectorAll('.lobby-nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('nav-wallet').classList.add('active');
+}
+
+async function loadWalletHistory() {
+    const list = document.getElementById('wallet-history-list');
+    if (!list) return;
+
+    try {
+        const history = await apiCall('GET', '/api/Auth/MemberHistory');
+        if (!history || history.length === 0) {
+            list.innerHTML = '<div class="wallet-history-empty">NO TRANSACTIONS YET</div>';
+            return;
+        }
+
+        const recent = history.slice(0, 50);
+        list.innerHTML = '';
+        recent.forEach(entry => {
+            const row = document.createElement('div');
+            row.className = 'wallet-history-row';
+
+            const info = document.createElement('div');
+            info.className = 'wallet-history-info';
+
+            const typeEl = document.createElement('div');
+            typeEl.className = 'wallet-history-type';
+            typeEl.textContent = formatTransactionType(entry.type);
+
+            const dateEl = document.createElement('div');
+            dateEl.className = 'wallet-history-date';
+            dateEl.textContent = formatTransactionDate(entry.createdUtc);
+
+            info.appendChild(typeEl);
+            info.appendChild(dateEl);
+
+            const amountEl = document.createElement('div');
+            amountEl.className = 'wallet-history-amount ' + (entry.amount >= 0 ? 'positive' : 'negative');
+            amountEl.textContent = (entry.amount >= 0 ? '+' : '') + formatNum(entry.amount);
+
+            row.appendChild(info);
+            row.appendChild(amountEl);
+            list.appendChild(row);
+        });
+    } catch (e) {
+        list.innerHTML = '<div class="wallet-history-empty">FAILED TO LOAD HISTORY</div>';
+    }
+}
+
+function formatTransactionType(type) {
+    const map = {
+        'Bet': 'BET',
+        'Win': 'WIN',
+        'TransferBalance': 'TRANSFER',
+        'MoveWinToBalance': 'WIN COLLECT',
+        'UpdateCredit': 'CREDIT UPDATE',
+        'DoubleUpWin': 'DOUBLE UP WIN',
+        'DoubleUpLoss': 'DOUBLE UP LOSS',
+        'JackpotWin': 'JACKPOT',
+        'Cashout': 'CASHOUT',
+        'TakeHalf': 'TAKE HALF'
+    };
+    return map[type] || type.toUpperCase();
+}
+
+function formatTransactionDate(utcStr) {
+    try {
+        const d = new Date(utcStr);
+        return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch {
+        return utcStr;
+    }
+}
+
+function backToLobbyFromGame() {
+    if (gameState !== 'idle' && gameState !== 'win') {
+        if (!confirm('Leave the game? Any current round may be affected.')) return;
+    }
+    if (machineJoined && machineId > 0) {
+        leaveMachine(machineId);
+    }
+    stopShuffle();
+    hideDuInfo();
+    gameState = 'idle';
+    winAmount = 0;
+    roundId = null;
+    machineJoined = false;
+    $('#game-screen').classList.remove('active');
+    showLobby();
+}
+
+async function enterLobbyAfterLogin(profileData) {
+    balance = profileData.walletBalance;
+    storeUserInfo(profileData.username, profileData.role);
+
+    if (balance <= 0) {
+        await addDemoCredits();
+        const profile = await apiCall('GET', '/api/Auth/GetUserById');
+        balance = profile.walletBalance;
+    }
+
+    $('#auth-screen').style.display = 'none';
+    showLobby();
 }
 
 async function initGame() {
@@ -1412,20 +1636,19 @@ document.addEventListener('DOMContentLoaded', () => {
         authBtn.textContent = 'LOADING...';
 
         try {
+            let profileData;
             if (isLogin) {
                 const data = await doLogin(username, password);
                 storeToken(data.tokens.accessToken);
-                balance = data.profile.walletBalance;
+                profileData = data.profile;
             } else {
                 await doSignup(username, password);
                 await doVerifyOtp(username);
                 const data = await doLogin(username, password);
                 storeToken(data.tokens.accessToken);
-                balance = data.profile.walletBalance;
+                profileData = data.profile;
             }
-            authScreen.style.display = 'none';
-            $('#game-screen').classList.add('active');
-            await initGame();
+            await enterLobbyAfterLogin(profileData);
         } catch (e) {
             authError.textContent = e.message;
             authBtn.disabled = false;
@@ -1505,13 +1728,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    const gameBackBtn = document.getElementById('game-back-lobby');
+    if (gameBackBtn) {
+        gameBackBtn.addEventListener('click', backToLobbyFromGame);
+    }
+
+    const lobbyLogoutBtn = document.getElementById('lobby-logout-btn');
+    if (lobbyLogoutBtn) {
+        lobbyLogoutBtn.addEventListener('click', doLogout);
+    }
+
+    const lobbyWalletBtn = document.getElementById('lobby-wallet-btn');
+    if (lobbyWalletBtn) {
+        lobbyWalletBtn.addEventListener('click', showWallet);
+    }
+
+    const walletBackBtn = document.getElementById('wallet-back-btn');
+    if (walletBackBtn) {
+        walletBackBtn.addEventListener('click', showLobby);
+    }
+
+    const navLobby = document.getElementById('nav-lobby');
+    const navWallet = document.getElementById('nav-wallet');
+    if (navLobby) navLobby.addEventListener('click', showLobby);
+    if (navWallet) navWallet.addEventListener('click', showWallet);
+
     if (token) {
         authScreen.style.display = 'none';
-        $('#game-screen').classList.add('active');
-        initGame().catch(() => {
-            clearToken();
-            authScreen.style.display = '';
-            $('#game-screen').classList.remove('active');
-        });
+        (async () => {
+            try {
+                const profile = await apiCall('GET', '/api/Auth/GetUserById');
+                balance = profile.walletBalance;
+                storeUserInfo(profile.username, profile.role);
+                if (balance <= 0) {
+                    await addDemoCredits();
+                    const updated = await apiCall('GET', '/api/Auth/GetUserById');
+                    balance = updated.walletBalance;
+                }
+                showLobby();
+            } catch (e) {
+                clearToken();
+                authScreen.style.display = '';
+            }
+        })();
     }
 });

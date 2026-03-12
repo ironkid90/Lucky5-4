@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Lucky 5 - Video Poker</title>
-    <link rel="stylesheet" href="/css/game.css?v=12">
+    <link rel="stylesheet" href="/css/game.css?v=13">
     <link rel="icon" href="/assets/images/coin.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -82,7 +82,77 @@
             </div>
         </div>
 
+        <div id="lobby-screen">
+            <div class="lobby-top-bar">
+                <div class="lobby-balance-box">
+                    <span class="lobby-balance-label">CREDIT</span>
+                    <span class="lobby-balance-value" id="lobby-balance">0</span>
+                </div>
+                <div class="lobby-user-box">
+                    <span class="lobby-username" id="lobby-username">PLAYER</span>
+                    <button class="lobby-btn lobby-btn-sm" id="lobby-logout-btn">LOGOUT</button>
+                </div>
+            </div>
+
+            <div class="lobby-body">
+                <div class="lobby-section">
+                    <div class="lobby-section-title">SELECT GAME</div>
+                    <div class="lobby-game-grid" id="lobby-game-grid"></div>
+                </div>
+
+                <div class="lobby-section">
+                    <div class="lobby-section-title">WALLET</div>
+                    <div class="lobby-wallet-summary">
+                        <div class="lobby-wallet-bal">
+                            <span class="lobby-wallet-bal-label">BALANCE</span>
+                            <span class="lobby-wallet-bal-value" id="lobby-wallet-bal">0</span>
+                        </div>
+                        <div class="lobby-wallet-actions">
+                            <button class="lobby-btn" id="lobby-wallet-btn">VIEW WALLET</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lobby-nav-bar">
+                <button class="lobby-nav-item active" id="nav-lobby" data-target="lobby">
+                    <span class="lobby-nav-icon">&#9776;</span>
+                    <span class="lobby-nav-label">LOBBY</span>
+                </button>
+                <button class="lobby-nav-item" id="nav-wallet" data-target="wallet">
+                    <span class="lobby-nav-icon">&#9733;</span>
+                    <span class="lobby-nav-label">WALLET</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="wallet-screen">
+            <div class="wallet-header">
+                <button class="lobby-btn lobby-btn-sm" id="wallet-back-btn">&lt; LOBBY</button>
+                <div class="wallet-title">WALLET</div>
+                <div class="wallet-spacer"></div>
+            </div>
+            <div class="wallet-body">
+                <div class="wallet-balance-card">
+                    <span class="wallet-balance-label">CURRENT BALANCE</span>
+                    <span class="wallet-balance-amount" id="wallet-balance">0</span>
+                </div>
+                <div class="wallet-deposit-withdraw">
+                    <button class="lobby-btn wallet-action-btn" id="wallet-deposit-btn" disabled>DEPOSIT</button>
+                    <button class="lobby-btn wallet-action-btn" id="wallet-withdraw-btn" disabled>WITHDRAW</button>
+                </div>
+                <div class="wallet-coming-soon">DEPOSIT / WITHDRAW COMING SOON</div>
+                <div class="wallet-history-title">RECENT TRANSACTIONS</div>
+                <div class="wallet-history-list" id="wallet-history-list">
+                    <div class="wallet-history-empty">NO TRANSACTIONS YET</div>
+                </div>
+            </div>
+        </div>
+
         <div id="game-screen">
+            <div id="game-back-bar">
+                <button class="lobby-btn lobby-btn-sm" id="game-back-lobby">&lt; LOBBY</button>
+            </div>
             <div id="paytable">
                 <div class="pay-row rf" data-hand="RoyalFlush">
                     <span class="hand-name">ROYAL FLUSH</span>
@@ -204,6 +274,6 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
-    <script src="/js/game.js?v=12"></script>
+    <script src="/js/game.js?v=13"></script>
 </body>
 </html>
