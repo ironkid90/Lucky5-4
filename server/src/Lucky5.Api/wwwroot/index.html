@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Lucky 5 - Video Poker</title>
-    <link rel="stylesheet" href="/css/game.css?v=9">
+    <link rel="stylesheet" href="/css/game.css?v=10">
     <link rel="icon" href="/assets/images/coin.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -196,7 +196,14 @@
         </div>
     </div>
 
+    <div id="menu-panel" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9999;justify-content:center;align-items:center;flex-direction:column;gap:12px;font-family:'Press Start 2P',monospace;">
+        <div style="color:#ff0;font-size:11px;margin-bottom:10px;letter-spacing:2px;">MENU</div>
+        <button id="btn-reset-machine" style="background:linear-gradient(180deg,#c00,#800);color:#fff;border:2px solid #f44;padding:10px 28px;font-family:'Press Start 2P',monospace;font-size:9px;cursor:pointer;letter-spacing:1px;">RESET MACHINE</button>
+        <button id="btn-logout-menu" style="background:linear-gradient(180deg,#444,#222);color:#fff;border:2px solid #888;padding:10px 28px;font-family:'Press Start 2P',monospace;font-size:9px;cursor:pointer;letter-spacing:1px;">LOGOUT</button>
+        <button id="btn-close-menu" style="background:none;color:#888;border:1px solid #555;padding:6px 20px;font-family:'Press Start 2P',monospace;font-size:8px;cursor:pointer;margin-top:8px;">CLOSE</button>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
-    <script src="/js/game.js?v=9"></script>
+    <script src="/js/game.js?v=10"></script>
 </body>
 </html>

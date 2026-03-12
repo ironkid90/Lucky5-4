@@ -104,4 +104,12 @@ public sealed class GameController(IGameService gameService) : ControllerBase
         var result = await gameService.GetMachineStateAsync(id, cancellationToken);
         return Ok(ApiResponse<object>.Ok(result, traceId: HttpContext.TraceIdentifier));
     }
+
+    [HttpPost("machine/{id}/reset")]
+    public async Task<ActionResult<ApiResponse<object>>> ResetMachine(int id, CancellationToken cancellationToken)
+    {
+        var userId = HttpContext.RequireUserId();
+        var result = await gameService.ResetMachineAsync(userId, id, cancellationToken);
+        return Ok(ApiResponse<object>.Ok(result, traceId: HttpContext.TraceIdentifier));
+    }
 }

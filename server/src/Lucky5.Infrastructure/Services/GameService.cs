@@ -638,6 +638,51 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
         });
     }
 
+    public Task<object> ResetMachineAsync(Guid userId, int machineId, CancellationToken cancellationToken)
+    {
+        var profile = RequireProfile(userId);
+
+        var roundsToRemove = store.ActiveRounds
+            .Where(kvp => kvp.Value.UserId == userId)
+            .Select(kvp => kvp.Key)
+            .ToList();
+        foreach (var rid in roundsToRemove)
+        {
+            store.ActiveRounds.Remove(rid);
+        }
+
+        profile.WalletBalance = 200_000;
+
+        lock (LedgerLock)
+        {
+            var ledger = RequireMachineLedger(machineId);
+            ledger.CapitalIn = 0;
+            ledger.CapitalOut = 0;
+            ledger.BaseCapitalOut = 0;
+            ledger.RoundCount = 0;
+            ledger.ConsecutiveLosses = 0;
+            ledger.RoundsSinceMediumWin = 0;
+            ledger.CooldownRoundsRemaining = 0;
+            ledger.NetSinceLastClose = 0;
+            ledger.LastCloseRoundNumber = 0;
+            ledger.RoundsSinceLucky5Hit = 0;
+            ledger.LastPayoutScale = 2.37m;
+            ledger.LastDistributionMode = DistributionMode.Neutral;
+            ledger.JackpotFullHouse = 25_000_000;
+            ledger.JackpotFullHouseRank = 14;
+            ledger.JackpotFourOfAKindA = 200_000;
+            ledger.JackpotFourOfAKindB = 200_000;
+            ledger.JackpotStraightFlush = 5_000_000;
+        }
+
+        return Task.FromResult<object>(new
+        {
+            success = true,
+            walletBalance = profile.WalletBalance,
+            message = "Machine and credits reset"
+        });
+    }
+
     private void FinalizeDoubleUp(GameRound round, MemberProfile profile, int cashoutCredits)
     {
         var previousWin = round.WinAmount;

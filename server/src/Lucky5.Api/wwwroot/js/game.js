@@ -1456,10 +1456,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const menuBtn = $('#btn-menu');
-    if (menuBtn) {
+    const menuPanel = $('#menu-panel');
+    if (menuBtn && menuPanel) {
         menuBtn.addEventListener('click', () => {
-            if (gameState === 'idle') {
-                doLogout();
+            if (gameState === 'idle' || gameState === 'win' || gameState === 'doubleup') {
+                menuPanel.style.display = 'flex';
+            }
+        });
+        $('#btn-close-menu').addEventListener('click', () => {
+            menuPanel.style.display = 'none';
+        });
+        $('#btn-logout-menu').addEventListener('click', () => {
+            menuPanel.style.display = 'none';
+            doLogout();
+        });
+        $('#btn-reset-machine').addEventListener('click', async () => {
+            if (!confirm('Reset machine? Your credits will be set back to 200,000 and the machine state will be cleared.')) return;
+            try {
+                await apiCall('POST', `/api/Game/machine/${machineId}/reset`);
+                menuPanel.style.display = 'none';
+                showMessage('MACHINE RESET - RELOADING...', 'win');
+                setTimeout(() => location.reload(), 1000);
+            } catch (e) {
+                showMessage('RESET FAILED: ' + e.message, 'lose');
             }
         });
     }
