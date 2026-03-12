@@ -62,6 +62,60 @@ const ALL_CARD_CODES = [];
     }
 })();
 
+const preloadedImages = {};
+
+function preloadAllAssets() {
+    return new Promise((resolve) => {
+        const allPaths = [];
+
+        ALL_CARD_CODES.forEach(code => {
+            allPaths.push(`/assets/images/cards/${code}.png`);
+        });
+        allPaths.push(CARD_BACK_SRC);
+
+        const buttonFiles = [
+            'bet.png', 'bet_on.png', 'big.png', 'big_on.png',
+            'small.png', 'small_on.png', 'deal_draw.png', 'deal_draw_on.png',
+            'cancel_hold.png', 'cancel_hold_on.png', 'hold_off.png', 'hold_on.png',
+            'take_half.png', 'take_half_on.png', 'take_score.png', 'take_score_on.png'
+        ];
+        buttonFiles.forEach(f => allPaths.push(`/assets/images/buttons/${f}`));
+
+        allPaths.push('/assets/images/board.png');
+        allPaths.push('/assets/images/lucky5.png');
+        allPaths.push('/assets/images/coin.png');
+        allPaths.push('/assets/images/splash.png');
+
+        const total = allPaths.length;
+        let loaded = 0;
+        const fillEl = document.getElementById('loader-fill');
+        const textEl = document.getElementById('loader-text');
+
+        function onDone() {
+            loaded++;
+            const pct = Math.round((loaded / total) * 100);
+            if (fillEl) fillEl.style.width = pct + '%';
+            if (textEl) textEl.textContent = `LOADING ${loaded}/${total}`;
+            if (loaded >= total) {
+                const loader = document.getElementById('asset-loader');
+                if (loader) {
+                    loader.classList.add('done');
+                    setTimeout(() => { loader.style.display = 'none'; }, 500);
+                }
+                resolve();
+            }
+        }
+
+        allPaths.forEach(src => {
+            const img = new Image();
+            img.onload = onDone;
+            img.onerror = onDone;
+            img.src = src;
+            preloadedImages[src] = img;
+        });
+    });
+}
+
 function randomCardSrc() {
     const code = ALL_CARD_CODES[Math.floor(Math.random() * ALL_CARD_CODES.length)];
     return `/assets/images/cards/${code}.png`;
@@ -771,15 +825,42 @@ function renderDoubleUpCards(dealerCard, showShuffle, challengerCard) {
     }
 }
 
+let shuffleRAF = null;
+let shuffleLastTime = 0;
+
 function startShuffle() {
     stopShuffle();
-    shuffleInterval = setInterval(() => {
-        const f = document.querySelector('#du-shuffle-frame img');
-        if (f) f.src = randomCardSrc();
-    }, 80);
+    shuffleLastTime = 0;
+    const frame = document.getElementById('du-shuffle-frame');
+    if (frame) frame.classList.add('du-flip-in');
+
+    function tick(ts) {
+        if (ts - shuffleLastTime >= 120) {
+            shuffleLastTime = ts;
+            const f = document.querySelector('#du-shuffle-frame img');
+            if (f) {
+                const frame = document.getElementById('du-shuffle-frame');
+                if (frame) {
+                    frame.classList.remove('du-flip-in');
+                    frame.classList.add('du-flip-out');
+                    setTimeout(() => {
+                        f.src = randomCardSrc();
+                        frame.classList.remove('du-flip-out');
+                        frame.classList.add('du-flip-in');
+                    }, 60);
+                }
+            }
+        }
+        shuffleRAF = requestAnimationFrame(tick);
+    }
+    shuffleRAF = requestAnimationFrame(tick);
 }
 
 function stopShuffle() {
+    if (shuffleRAF) {
+        cancelAnimationFrame(shuffleRAF);
+        shuffleRAF = null;
+    }
     if (shuffleInterval) {
         clearInterval(shuffleInterval);
         shuffleInterval = null;
@@ -903,43 +984,60 @@ function exitDoubleUp() {
     }
 }
 
-async function animateDrainToCredits(amount, startBalance) {
-    takeScoreAnimating = true;
-    setButtonStates();
+function animateDrainToCredits(amount, startBalance) {
+    return new Promise((resolve) => {
+        takeScoreAnimating = true;
+        setButtonStates();
 
-    let remaining = amount;
-    const totalDuration = Math.min(5000, Math.max(1500, amount / 500000 * 4000));
-    const steps = 40;
-    const stepDelay = totalDuration / steps;
-    const perStep = Math.ceil(amount / steps);
-    const creditsEl = $('#credits');
-    const winEl = $('#win-indicator');
-    let credited = 0;
+        const totalDuration = Math.min(5000, Math.max(1500, amount / 500000 * 4000));
+        const creditsEl = $('#credits');
+        const creditsSpan = $('#credits span');
+        const winEl = $('#win-indicator');
+        const msgEl = $('#game-message');
+        let startTime = null;
 
-    for (let i = 0; i < steps && credited < amount; i++) {
-        const chunk = Math.min(perStep, amount - credited);
-        credited += chunk;
-        remaining = amount - credited;
+        let lastTickToggle = 0;
 
-        balance = startBalance + credited;
-        $('#credits span').textContent = formatNum(balance);
-        creditsEl.classList.add('credit-ticking');
+        function frame(ts) {
+            if (!startTime) startTime = ts;
+            const elapsed = ts - startTime;
+            const progress = Math.min(elapsed / totalDuration, 1);
+            const credited = Math.floor(amount * progress);
+            const remaining = amount - credited;
 
-        if (remaining > 0) {
-            winEl.textContent = `WIN ${formatNum(remaining)}`;
-        } else {
-            winEl.textContent = '';
+            balance = startBalance + credited;
+            creditsSpan.textContent = formatNum(balance);
+
+            if (ts - lastTickToggle > 120) {
+                lastTickToggle = ts;
+                creditsEl.classList.toggle('credit-ticking');
+            }
+
+            if (remaining > 0) {
+                winEl.textContent = `WIN ${formatNum(remaining)}`;
+            } else {
+                winEl.textContent = '';
+            }
+
+            if (msgEl) {
+                msgEl.textContent = `COLLECTING... ${formatNum(credited)} / ${formatNum(amount)}`;
+                msgEl.className = 'win';
+            }
+
+            if (progress < 1) {
+                requestAnimationFrame(frame);
+            } else {
+                balance = startBalance + amount;
+                updateCredits();
+                winEl.textContent = '';
+                creditsEl.classList.remove('credit-ticking');
+                takeScoreAnimating = false;
+                resolve();
+            }
         }
 
-        showMessage(`COLLECTING... ${formatNum(credited)} / ${formatNum(amount)}`, 'win');
-        await new Promise(r => setTimeout(r, stepDelay));
-        creditsEl.classList.remove('credit-ticking');
-    }
-
-    balance = startBalance + amount;
-    updateCredits();
-    winEl.textContent = '';
-    takeScoreAnimating = false;
+        requestAnimationFrame(frame);
+    });
 }
 
 async function mainTakeScore() {
@@ -1220,9 +1318,19 @@ async function initGame() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    const authBtn = $('#auth-submit');
+    authBtn.disabled = true;
+    authBtn.textContent = 'LOADING...';
+
+    let assetsReady = false;
+    preloadAllAssets().then(() => {
+        assetsReady = true;
+        authBtn.disabled = false;
+        authBtn.textContent = 'LOGIN';
+    });
+
     const authScreen = $('#auth-screen');
     const authError = $('#auth-error');
-    const authBtn = $('#auth-submit');
     const authToggle = $('#auth-toggle');
     let isLogin = true;
 
@@ -1237,6 +1345,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     authBtn.addEventListener('click', async () => {
+        if (!assetsReady) {
+            authError.textContent = 'Assets still loading, please wait';
+            return;
+        }
         const username = $('#auth-username').value.trim();
         const password = $('#auth-password').value.trim();
         if (!username || !password) {

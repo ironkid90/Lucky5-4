@@ -4,11 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Lucky 5 - Video Poker</title>
-    <link rel="stylesheet" href="/css/game.css?v=6">
+    <link rel="stylesheet" href="/css/game.css?v=7">
     <link rel="icon" href="/assets/images/coin.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="game-container">
+        <div id="asset-loader">
+            <div class="loader-content">
+                <div class="loader-title">LUCKY 5</div>
+                <div class="loader-bar-track"><div class="loader-bar-fill" id="loader-fill"></div></div>
+                <div class="loader-text" id="loader-text">LOADING ASSETS...</div>
+            </div>
+        </div>
+        <div class="crt-overlay"></div>
         <div id="auth-screen">
             <div class="auth-ambient"></div>
             <div class="cabinet-ghost">
@@ -107,6 +118,8 @@
                 </div>
             </div>
 
+            <div id="lucky5-banner">LUCKY 5 IS ACTIVE</div>
+
             <div id="credit-stake-bar">
                 <div id="credits" class="credit-val">CREDIT<br><span>0</span></div>
                 <div id="win-indicator"></div>
@@ -175,7 +188,7 @@
                     <button class="cab-btn cab-takehalf" id="btn-take-half" disabled></button>
                     <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
                         <button class="cab-btn cab-menu" id="btn-menu">&#9776;</button>
-                        <span style="font-family:'Arcade',monospace;font-size:8px;color:#aaa;letter-spacing:1px;">MENU</span>
+                        <span style="font-family:'Press Start 2P',monospace;font-size:6px;color:#aaa;letter-spacing:1px;">MENU</span>
                     </div>
                     <button class="cab-btn cab-takescore" id="btn-take-score" disabled></button>
                 </div>
