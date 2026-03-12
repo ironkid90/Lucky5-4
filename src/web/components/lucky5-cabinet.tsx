@@ -35,6 +35,18 @@ const DEFAULT_USERNAME = "tester";
 const DEFAULT_PASSWORD = "password";
 const DEFAULT_OTP = "123456";
 
+const PAYTABLE_COLORS = [
+  "#ffffff",  // Royal Flush
+  "#ffd447",  // Straight Flush
+  "#84ff55",  // Four of a Kind
+  "#9ce6ff",  // Full House
+  "#c8d8ff",  // Flush
+  "#88aaff",  // Straight
+  "#dddddd",  // Three of a Kind
+  "#cc99ff",  // Two Pair
+  "#a89880",  // Jacks or Better / others
+];
+
 type MessageTone = "ready" | "warning" | "danger";
 
 function formatMoney(value: number) {
@@ -401,12 +413,19 @@ export function Lucky5Cabinet() {
             <div className="paytable">
               <div className="paytable-title">Lucky5 payout glass</div>
               <div className="paytable-grid">
-                {payoutRows.map(([hand, payout]) => (
-                  <div className="paytable-row" key={hand}>
-                    <span>{hand.replace(/([A-Z])/g, " $1").trim()}</span>
-                    <strong>x{payout}</strong>
-                  </div>
-                ))}
+                {payoutRows.map(([hand, payout], rowIndex) => {
+                  const rowColor = PAYTABLE_COLORS[rowIndex] ?? "#a89880";
+                  return (
+                    <div
+                      className="paytable-row"
+                      key={hand}
+                      style={{ color: rowColor, borderBottomColor: `${rowColor}22` }}
+                    >
+                      <span>{hand.replace(/([A-Z])/g, " $1").trim()}</span>
+                      <strong style={{ color: rowColor }}>x{payout}</strong>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -414,12 +433,12 @@ export function Lucky5Cabinet() {
               <div className="status-box">
                 <div className="status-title">Machine ledger</div>
                 <div className="status-grid">
-                  <div className="status-chip">
-                    <span>Wallet</span>
+                  <div className="status-chip ledger">
+                    <span>Credit</span>
                     <strong>{formatMoney(profile?.walletBalance ?? 0)}</strong>
                   </div>
-                  <div className="status-chip">
-                    <span>Bet</span>
+                  <div className="status-chip ledger">
+                    <span>Stake</span>
                     <strong>{betAmount || "5000"}</strong>
                   </div>
                   <div className="status-chip">
@@ -475,17 +494,7 @@ export function Lucky5Cabinet() {
 
             <div className="card-row">
               {Array.from({ length: 5 }, (_, index) => activeCards[index] ?? null).map((card, index) => (
-                <div className="card-slot" key={`card-${index}`}>
-                  <PlayingCard card={card} label={`Card ${index + 1}`} />
-                  <button
-                    className={`hold-button ${holdIndexes.includes(index) ? "active" : ""}`}
-                    type="button"
-                    onClick={() => toggleHold(index)}
-                    disabled={!dealResult || !!drawResult || busy}
-                  >
-                    {holdIndexes.includes(index) ? "HELD" : "HOLD"}
-                  </button>
-                </div>
+                <PlayingCard key={`card-${index}`} card={card} label={`Card ${index + 1}`} />
               ))}
             </div>
           </div>
@@ -517,6 +526,20 @@ export function Lucky5Cabinet() {
               </div>
             ) : (
               <>
+                <div className="hold-row">
+                  {Array.from({ length: 5 }, (_, index) => (
+                    <button
+                      key={index}
+                      className={`hold-button ${holdIndexes.includes(index) ? "active" : ""}`}
+                      type="button"
+                      onClick={() => toggleHold(index)}
+                      disabled={!dealResult || !!drawResult || busy}
+                    >
+                      {holdIndexes.includes(index) ? "HELD" : "HOLD"}
+                    </button>
+                  ))}
+                </div>
+
                 <div className="control-row primary">
                   <div className="bet-input">
                     <label>
