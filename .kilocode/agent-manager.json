@@ -1,5 +1,17 @@
 {
-  "worktrees": {},
-  "sessions": {},
-  "sessionsCollapsed": true
+  "worktrees": {
+    "wt-1773341352842-1": {
+      "branch": "kilo-1773341350736",
+      "path": "c:\\Users\\Gabi\\Documents\\GitHub\\Lucky5-4\\.kilocode\\worktrees\\kilo-1773341350736",
+      "parentBranch": "main",
+      "createdAt": "2026-03-12T18:49:12.842Z",
+      "remote": "origin"
+    }
+  },
+  "sessions": {
+    "ses_31d291592ffeDm7IuuodIvibBh": {
+      "worktreeId": "wt-1773341352842-1",
+      "createdAt": "2026-03-12T18:49:14.927Z"
+    }
+  }
 }
