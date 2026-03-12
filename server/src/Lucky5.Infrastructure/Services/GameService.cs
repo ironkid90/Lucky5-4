@@ -478,7 +478,6 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
         switch (resolution.Outcome)
         {
             case Lucky5DoubleUpOutcome.Win:
-                round.WinAmount = resolution.NextAmount;
                 return Task.FromResult(new DoubleUpResultDto(
                     roundId,
                     "Win",

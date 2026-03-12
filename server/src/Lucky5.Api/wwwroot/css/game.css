@@ -1082,8 +1082,8 @@ body {
 
 .cab-hold {
     width: 100%;
-    max-width: 72px;
-    height: 48px;
+    max-width: 90px;
+    height: 58px;
     background-image: url('/assets/images/buttons/hold_off.png');
 }
 
@@ -1093,8 +1093,8 @@ body {
 
 .cab-big {
     width: 100%;
-    max-width: 72px;
-    height: 52px;
+    max-width: 90px;
+    height: 62px;
     background-image: url('/assets/images/buttons/big.png');
 }
 
@@ -1104,8 +1104,8 @@ body {
 
 .cab-small {
     width: 100%;
-    max-width: 72px;
-    height: 52px;
+    max-width: 90px;
+    height: 62px;
     background-image: url('/assets/images/buttons/small.png');
 }
 
@@ -1115,8 +1115,8 @@ body {
 
 .cab-cancel {
     width: 100%;
-    max-width: 72px;
-    height: 52px;
+    max-width: 90px;
+    height: 62px;
     background-image: url('/assets/images/buttons/cancel_hold.png');
 }
 
@@ -1126,8 +1126,8 @@ body {
 
 .cab-deal {
     width: 100%;
-    max-width: 72px;
-    height: 52px;
+    max-width: 90px;
+    height: 62px;
     background-image: url('/assets/images/buttons/deal_draw.png');
 }
 
@@ -1137,8 +1137,8 @@ body {
 
 .cab-bet {
     width: 100%;
-    max-width: 72px;
-    height: 52px;
+    max-width: 90px;
+    height: 62px;
     background-image: url('/assets/images/buttons/bet.png');
 }
 
@@ -1148,8 +1148,8 @@ body {
 
 .cab-takehalf {
     width: 100%;
-    max-width: 84px;
-    height: 52px;
+    max-width: 100px;
+    height: 62px;
     background-image: url('/assets/images/buttons/take_half.png');
     justify-self: end;
 }
@@ -1159,8 +1159,8 @@ body {
 }
 
 .cab-menu {
-    width: 48px;
-    height: 48px;
+    width: 54px;
+    height: 54px;
     background: linear-gradient(180deg, #444, #222);
     color: #aaa !important;
     font-size: 18px !important;
@@ -1170,8 +1170,8 @@ body {
 
 .cab-takescore {
     width: 100%;
-    max-width: 84px;
-    height: 52px;
+    max-width: 100px;
+    height: 62px;
     background-image: url('/assets/images/buttons/take_score.png');
     justify-self: start;
 }
