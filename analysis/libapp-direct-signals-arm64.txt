@@ -1,0 +1,58 @@
+/General/contact-info
+machine_game_state
+4 of a kind
+/Auth/verify-otp
+getDefaultPokerRules
+/Game/games
+/Auth/login
+full house
+/Auth/resend-otp
+/General/contact-types
+4 of a Kind
+2 Pair
+/Auth/GetUserById
+PokerRule
+2 PAIR
+/Game/cards
+LeaveMachine
+/Auth/logout
+/General/app-settings
+/Auth/signup
+member_balance_change
+JoinMachine
+/Auth/MemberHistory
+FULL HOUSE
+onDealDrawPressed
+/Auth/TransferBalance
+Straight Flush
+Calling toggleHold(
+joinMachine
+https://www.ai9poker.com/upload/
+straight flush
+/Auth/UpdateCredit
+/General/contact-report
+royal flush
+toggleHold
+/General/terms
+MachineStatusChanged
+https://www.ai9poker.com/api
+/Auth/MoveWinToBalance
+WinBonusDefaultPokerRulesID
+4 OF A KIND
+BetPlaced
+2 pair
+https://www.ai9poker.com/CarrePokerGameHub
+/Game/defaultRules
+STRAIGHT FLUSH
+/Game/offer
+winBonusDefaultPokerRulesID
+/Game/games/machines
+Full House
+onBigPressed
+leaveMachine
+_handleJoinMachine@383455537
+onSmallPressed
+Royal Flush
+onLeaveMachinePressed
+PokerRule.fromJson
+ROYAL FLUSH
