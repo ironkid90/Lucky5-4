@@ -14,8 +14,7 @@ let pressSound = null;
 let duSwitchesRemaining = 0;
 let duIsNoLoseActive = false;
 let duSessionStarted = false;
-let duCardHistory = [];
-let duHistoryPage = 0;
+let duDealerCard = null;
 let jackpots = null;
 let shuffleInterval = null;
 let takeScoreAnimating = false;
@@ -274,40 +273,34 @@ function renderCards(cardData, animate) {
     area.classList.remove('du-mode');
     for (let i = 0; i < 5; i++) {
         const slot = document.createElement('div');
-        slot.className = 'card-slot' + (animate ? ' dealing' : '');
+        slot.className = 'card-slot';
         if (holdIndexes.has(i)) slot.classList.add('held');
-        slot.style.animationDelay = animate ? `${i * 0.1}s` : '0s';
+
+        if (animate) {
+            slot.classList.add('slide-in');
+        }
 
         const badge = document.createElement('div');
         badge.className = 'hold-badge';
         badge.textContent = 'HOLD';
 
-        const inner = document.createElement('div');
-        inner.className = 'card-inner';
+        const cardImg = document.createElement('div');
+        cardImg.className = 'card-face';
+        cardImg.innerHTML = `<img src="${cardImagePath(cardData[i])}" alt="card">`;
 
-        const back = document.createElement('div');
-        back.className = 'card-back';
-        back.innerHTML = `<img src="${cardImagePath(cardData[i])}" alt="card">`;
-
-        const front = document.createElement('div');
-        front.className = 'card-front';
-        front.innerHTML = `<img src="${CARD_BACK_SRC}" alt="back">`;
-
-        inner.appendChild(front);
-        inner.appendChild(back);
         slot.appendChild(badge);
-        slot.appendChild(inner);
+        slot.appendChild(cardImg);
 
         slot.addEventListener('click', () => toggleHold(i));
         area.appendChild(slot);
 
         if (animate) {
             setTimeout(() => {
-                inner.classList.add('flipped');
-                slot.classList.remove('dealing');
-            }, 80 + i * 100);
+                slot.classList.remove('slide-in');
+                slot.classList.add('slide-in-done');
+            }, 80 + i * 120);
         } else {
-            inner.classList.add('flipped');
+            slot.classList.add('slide-in-done');
         }
     }
 }
@@ -414,28 +407,9 @@ async function doSwitchDealer() {
         duSwitchesRemaining = result.switchesRemaining;
         duIsNoLoseActive = result.isNoLoseActive;
         winAmount = result.currentAmount;
+        duDealerCard = result.dealerCard;
 
-        let swapped = false;
-        for (let i = duCardHistory.length - 1; i >= 0; i--) {
-            if (duCardHistory[i].label === '') {
-                duCardHistory[i] = {
-                    card: result.dealerCard,
-                    label: '',
-                    isLucky: result.dealerCard && result.dealerCard.code === '5S'
-                };
-                swapped = true;
-                break;
-            }
-        }
-        if (!swapped) {
-            duCardHistory.push({
-                card: result.dealerCard,
-                label: '',
-                isLucky: result.dealerCard && result.dealerCard.code === '5S'
-            });
-        }
-
-        renderDuHistory(true);
+        renderDoubleUpCards(duDealerCard, true, null);
         showMessage(`SWITCHED - WIN: ${formatNum(result.currentAmount)} (${duSwitchesRemaining} left)`, 'win');
         setButtonStates();
     } catch (e) {
@@ -638,13 +612,14 @@ async function doDeal() {
             setTimeout(() => {
                 $$('.card-slot').forEach((slot, i) => {
                     if (!holdIndexes.has(i)) {
-                        const inner = slot.querySelector('.card-inner');
-                        inner.classList.remove('flipped');
+                        slot.classList.remove('slide-in-done');
+                        slot.classList.add('slide-in');
                         setTimeout(() => {
-                            const backImg = slot.querySelector('.card-back img');
-                            backImg.src = cardImagePath(cards[i]);
-                            inner.classList.add('flipped');
-                        }, 150);
+                            const face = slot.querySelector('.card-face img');
+                            if (face) face.src = cardImagePath(cards[i]);
+                            slot.classList.remove('slide-in');
+                            slot.classList.add('slide-in-done');
+                        }, 80 + i * 80);
                     }
                 });
             }, 60);
@@ -710,42 +685,52 @@ function hideDuInfo() {
     $('#du-info-panel').classList.remove('visible');
 }
 
-function renderDuHistory(showShuffleSlot) {
+function renderDoubleUpCards(dealerCard, showShuffle, challengerCard) {
     const area = $('#card-area');
     area.innerHTML = '';
     area.classList.add('du-mode');
 
     stopShuffle();
 
-    const maxVisible = 5;
-    const total = duCardHistory.length + (showShuffleSlot ? 1 : 0);
-    const startIdx = Math.max(0, duCardHistory.length - maxVisible + (showShuffleSlot ? 1 : 0));
+    const dealerSlot = document.createElement('div');
+    dealerSlot.className = 'du-card-slot';
+    const dealerLabel = document.createElement('div');
+    dealerLabel.className = 'du-card-label';
+    dealerLabel.textContent = 'DEALER';
+    const dealerFrame = document.createElement('div');
+    dealerFrame.className = 'du-card-frame dealer-card';
+    const isLucky = dealerCard && dealerCard.code === '5S';
+    if (isLucky) dealerFrame.classList.add('lucky5-glow');
+    dealerFrame.innerHTML = `<img src="${cardImagePath(dealerCard)}" alt="dealer">`;
+    dealerSlot.appendChild(dealerLabel);
+    dealerSlot.appendChild(dealerFrame);
+    area.appendChild(dealerSlot);
 
-    for (let i = startIdx; i < duCardHistory.length; i++) {
-        const entry = duCardHistory[i];
-        const slot = document.createElement('div');
-        slot.className = 'du-card-slot';
-        const label = document.createElement('div');
-        label.className = 'du-card-label';
-        label.textContent = entry.label || '';
-        if (entry.label === 'BIG') label.classList.add('du-label-big');
-        if (entry.label === 'SMALL') label.classList.add('du-label-small');
-        const frame = document.createElement('div');
-        frame.className = 'du-card-frame';
-        if (entry.isLucky) frame.classList.add('lucky5-glow');
-        frame.innerHTML = `<img src="${cardImagePath(entry.card)}" alt="card">`;
-        slot.appendChild(label);
-        slot.appendChild(frame);
-        area.appendChild(slot);
-    }
+    const spacer = document.createElement('div');
+    spacer.className = 'du-spacer';
+    area.appendChild(spacer);
 
-    if (showShuffleSlot) {
+    if (challengerCard) {
+        const challSlot = document.createElement('div');
+        challSlot.className = 'du-card-slot slide-in-done';
+        const challLabel = document.createElement('div');
+        challLabel.className = 'du-card-label';
+        challLabel.textContent = '';
+        const challFrame = document.createElement('div');
+        challFrame.className = 'du-card-frame';
+        const challLucky = challengerCard.code === '5S';
+        if (challLucky) challFrame.classList.add('lucky5-glow');
+        challFrame.innerHTML = `<img src="${cardImagePath(challengerCard)}" alt="result">`;
+        challSlot.appendChild(challLabel);
+        challSlot.appendChild(challFrame);
+        area.appendChild(challSlot);
+    } else if (showShuffle) {
         const challSlot = document.createElement('div');
         challSlot.className = 'du-card-slot';
         challSlot.id = 'du-shuffle-slot';
         const challLabel = document.createElement('div');
         challLabel.className = 'du-card-label';
-        challLabel.textContent = '';
+        challLabel.textContent = 'BIG / SMALL ?';
         const challFrame = document.createElement('div');
         challFrame.className = 'du-card-frame';
         challFrame.id = 'du-shuffle-frame';
@@ -754,13 +739,6 @@ function renderDuHistory(showShuffleSlot) {
         challSlot.appendChild(challFrame);
         area.appendChild(challSlot);
         startShuffle();
-    }
-
-    if (duCardHistory.length > maxVisible) {
-        const pageIndicator = document.createElement('div');
-        pageIndicator.className = 'du-page-indicator';
-        pageIndicator.textContent = `${startIdx + 1}-${duCardHistory.length} / ${duCardHistory.length}`;
-        area.appendChild(pageIndicator);
     }
 }
 
@@ -787,18 +765,15 @@ async function startDoubleUpFlow() {
         duSessionStarted = true;
         duSwitchesRemaining = result.switchesRemaining;
         duIsNoLoseActive = result.isNoLoseActive;
+        duDealerCard = result.dealerCard;
         gameState = 'doubleup';
-
-        duCardHistory = [];
-        const isLucky = result.dealerCard && result.dealerCard.code === '5S';
-        duCardHistory.push({ card: result.dealerCard, label: '', isLucky });
 
         showDuInfo();
         showMessage(`DOUBLE UP - WIN: ${formatNum(result.currentAmount)}`, 'win');
         updateWinAmountDisplay(result.currentAmount, active4kSlot === 0 ? 'A' : 'B');
         updateWinIndicator(result.currentAmount);
         if (currentHandRank) highlightPaytableDU(currentHandRank, result.currentAmount);
-        renderDuHistory(true);
+        renderDoubleUpCards(duDealerCard, true, null);
         setButtonStates();
     } catch (e) {
         showMessage(e.message, 'lose');
@@ -818,12 +793,7 @@ async function doDoubleUp(guess) {
         const result = await apiCall('POST', '/api/Game/double-up/guess', { roundId, guess });
 
         setTimeout(() => {
-            if (result.challengerCard) {
-                const isLucky = result.challengerCard.code === '5S';
-                duCardHistory.push({ card: result.challengerCard, label: guess.toUpperCase(), isLucky });
-            }
-
-            renderDuHistory(false);
+            renderDoubleUpCards(duDealerCard, false, result.challengerCard);
 
             if (result.status === 'Win') {
                 winAmount = result.currentAmount;
@@ -837,11 +807,8 @@ async function doDoubleUp(guess) {
 
                 setTimeout(() => {
                     if (gameState === 'doubleup') {
-                        if (result.dealerCard) {
-                            const dl = result.dealerCard.code === '5S';
-                            duCardHistory.push({ card: result.dealerCard, label: '', isLucky: dl });
-                        }
-                        renderDuHistory(true);
+                        duDealerCard = result.dealerCard;
+                        renderDoubleUpCards(duDealerCard, true, null);
                         duSwitchesRemaining = result.switchesRemaining;
                         duIsNoLoseActive = false;
                         setButtonStates();
@@ -887,7 +854,7 @@ function exitDoubleUp() {
     hideDuInfo();
     duSessionStarted = false;
     duIsNoLoseActive = false;
-    duCardHistory = [];
+    duDealerCard = null;
     $('#lucky5-flash').classList.remove('active');
     updateWinAmountDisplay(0);
 
@@ -913,8 +880,8 @@ async function animateDrainToCredits(amount, startBalance) {
     setButtonStates();
 
     let remaining = amount;
-    const totalDuration = Math.min(2500, Math.max(500, amount / 2000000 * 2500));
-    const steps = 20;
+    const totalDuration = Math.min(5000, Math.max(1500, amount / 500000 * 4000));
+    const steps = 40;
     const stepDelay = totalDuration / steps;
     const perStep = Math.ceil(amount / steps);
     const creditsEl = $('#credits');

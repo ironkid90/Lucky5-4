@@ -297,77 +297,59 @@ body {
     align-items: center;
     justify-content: center;
     gap: 6px;
-    padding: 6px 8px;
+    padding: 4px 8px;
     position: relative;
     min-height: 0;
+    overflow: hidden;
 }
 
 #card-area.du-mode {
-    gap: 2px;
+    gap: 12px;
     justify-content: center;
-}
-
-/* Single centered card in DU (clone shows one large card) */
-#card-area.du-single-card {
-    justify-content: center;
-    align-items: center;
-}
-
-#card-area.du-single-card .du-card-slot {
-    width: 35%;
-    max-width: 180px;
 }
 
 .card-slot {
     position: relative;
     width: 18%;
     max-width: 110px;
-    aspect-ratio: 2/3;
-    perspective: 600px;
+    height: 100%;
+    max-height: calc(100% - 8px);
     cursor: pointer;
+    opacity: 1;
 }
 
-.card-inner {
+.card-face {
     width: 100%;
     height: 100%;
-    position: relative;
-    transition: transform 0.3s ease;
-    transform-style: preserve-3d;
-}
-
-.card-inner.flipped {
-    transform: rotateY(180deg);
-}
-
-.card-front, .card-back {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    backface-visibility: hidden;
     border-radius: 6px;
     overflow: hidden;
     border: 2px solid #444;
     box-shadow: 0 2px 10px rgba(0,0,0,0.6);
 }
 
-.card-front img, .card-back img {
+.card-face img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     image-rendering: pixelated;
+    background: #c8b800;
 }
 
-.card-back {
-    transform: rotateY(180deg);
+.card-slot.slide-in {
+    opacity: 0;
+    transform: translateX(-60px);
+    transition: none;
 }
 
-.card-front {
-    background: #1a1a1a;
+.card-slot.slide-in-done {
+    opacity: 1;
+    transform: translateX(0);
+    transition: opacity 0.15s ease, transform 0.2s ease;
 }
 
 .hold-badge {
     position: absolute;
-    top: -10px;
+    top: 2px;
     left: 50%;
     transform: translateX(-50%);
     background: linear-gradient(180deg, #FFD700, #DAA520);
@@ -386,7 +368,7 @@ body {
     display: block;
 }
 
-.card-slot.held .card-inner {
+.card-slot.held .card-face {
     border-color: #FFD700;
     box-shadow: 0 0 14px rgba(255,215,0,0.4);
 }
@@ -531,42 +513,32 @@ body {
 
 .du-card-slot {
     position: relative;
-    width: 17%;
-    max-width: 100px;
-    aspect-ratio: 2/3;
+    width: 30%;
+    max-width: 140px;
+    height: 100%;
+    max-height: calc(100% - 20px);
     text-align: center;
     flex-shrink: 0;
 }
 
+.du-spacer {
+    width: 20px;
+    flex-shrink: 0;
+}
+
 .du-card-slot .du-card-label {
-    font-size: 10px;
-    color: #aaa;
+    font-size: 11px;
+    color: #FFD700;
     letter-spacing: 1px;
-    margin-bottom: 2px;
-    height: 14px;
+    margin-bottom: 3px;
+    height: 16px;
     font-weight: bold;
-}
-
-.du-card-slot .du-card-label.du-label-big {
-    color: #ff4444;
-}
-
-.du-card-slot .du-card-label.du-label-small {
-    color: #44aaff;
-}
-
-.du-page-indicator {
-    position: absolute;
-    bottom: 2px;
-    right: 8px;
-    font-size: 9px;
-    color: #666;
-    letter-spacing: 1px;
+    text-shadow: 0 0 6px rgba(255,215,0,0.5);
 }
 
 .du-card-slot .du-card-frame {
     width: 100%;
-    aspect-ratio: 2/3;
+    height: calc(100% - 20px);
     border-radius: 6px;
     overflow: hidden;
     border: 2px solid #555;
@@ -576,8 +548,9 @@ body {
 .du-card-slot .du-card-frame img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     image-rendering: pixelated;
+    background: #c8b800;
 }
 
 .du-card-slot .du-card-frame.dealer-card {
@@ -893,7 +866,7 @@ body {
     }
 }
 
-.card-slot.dealing .card-inner {
+.card-slot.dealing .card-face {
     animation: deal-in 0.25s ease-out forwards;
 }
 
@@ -902,7 +875,7 @@ body {
     50% { box-shadow: 0 0 24px rgba(0,255,0,0.8), 0 0 40px rgba(0,255,0,0.3); }
 }
 
-.card-slot.winning .card-inner {
+.card-slot.winning .card-face {
     animation: win-flash 0.6s ease-in-out 3;
 }
 
