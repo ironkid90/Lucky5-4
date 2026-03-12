@@ -959,14 +959,34 @@ async function doDoubleUp(guess) {
                 gameState = 'win';
                 setTimeout(() => exitDoubleUp(), 1200);
             } else if (result.status === 'MachineClosed') {
-                winAmount = result.currentAmount;
-                balance = result.walletBalance;
+                const closedAmount = result.currentAmount;
+                balance = result.walletBalance - closedAmount;
                 updateCredits();
-                updateWinIndicator(winAmount);
-                updateWinAmountDisplay(winAmount, active4kSlot === 0 ? 'A' : 'B');
+                updateWinIndicator(closedAmount);
+                updateWinAmountDisplay(closedAmount, active4kSlot === 0 ? 'A' : 'B');
                 showMessage('MACHINE CLOSED - MAX CREDITS!', 'win');
-                gameState = 'win';
-                setTimeout(() => exitDoubleUp(), 1200);
+                stopShuffle();
+                hideDuInfo();
+                duSessionStarted = false;
+                const bannerMC = document.getElementById('lucky5-banner');
+                if (bannerMC) bannerMC.classList.remove('active');
+                const flashMC = document.getElementById('lucky5-flash');
+                if (flashMC) flashMC.classList.remove('active');
+                setTimeout(async () => {
+                    await animateDrainToCredits(closedAmount, balance);
+                    winAmount = 0;
+                    balance = result.walletBalance;
+                    updateCredits();
+                    updateWinIndicator(0);
+                    updateWinAmountDisplay(0);
+                    gameState = 'idle';
+                    updatePaytable();
+                    updateBonusBar(null);
+                    currentHandRank = null;
+                    showIdleTitle();
+                    setButtonStates();
+                    showMessage('PLACE YOUR BET');
+                }, 1200);
             } else {
                 winAmount = 0;
                 balance = result.walletBalance;

@@ -79,21 +79,13 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
                 _ => DistributionMode.Neutral
             };
 
-            var jackpotContribution = request.BetAmount * 0.01m;
-            var bucket1 = decimal.Floor(jackpotContribution / 3m * 100m) / 100m;
-            var bucket2 = bucket1;
-            var bucket3 = jackpotContribution - bucket1 - bucket2;
-
             ledger.ActiveFourOfAKindSlot = (ledger.RoundCount % 2 == 0)
                 ? (int)(seed % 2)
                 : 1 - (int)(seed % 2);
-            if (ledger.ActiveFourOfAKindSlot == 0)
-                ledger.JackpotFourOfAKindA = Math.Min(ledger.JackpotFourOfAKindA + bucket1, 999_999);
-            else
-                ledger.JackpotFourOfAKindB = Math.Min(ledger.JackpotFourOfAKindB + bucket1, 999_999);
-
-            ledger.JackpotFullHouse += bucket2;
-            ledger.JackpotStraightFlush = Math.Min(ledger.JackpotStraightFlush + bucket3, 20_000_000);
+            ledger.JackpotFourOfAKindA = Math.Min(ledger.JackpotFourOfAKindA + 100, 999_999);
+            ledger.JackpotFourOfAKindB = Math.Min(ledger.JackpotFourOfAKindB + 100, 999_999);
+            ledger.JackpotFullHouse = Math.Min(ledger.JackpotFullHouse + 100, 25_000_000);
+            ledger.JackpotStraightFlush = Math.Min(ledger.JackpotStraightFlush + 100, 20_000_000);
         }
 
         var standardDeck = FiveCardDrawEngine.BuildStandardDeck();
@@ -181,18 +173,10 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
             var ledger = RequireMachineLedger(round.MachineId);
             ledger.CapitalIn += round.BetAmount;
 
-            var jackpotContribution = round.BetAmount * 0.01m;
-            var bucket1 = decimal.Floor(jackpotContribution / 3m * 100m) / 100m;
-            var bucket2 = bucket1;
-            var bucket3 = jackpotContribution - bucket1 - bucket2;
-
-            if (ledger.ActiveFourOfAKindSlot == 0)
-                ledger.JackpotFourOfAKindA = Math.Min(ledger.JackpotFourOfAKindA + bucket1, 999_999);
-            else
-                ledger.JackpotFourOfAKindB = Math.Min(ledger.JackpotFourOfAKindB + bucket1, 999_999);
-
-            ledger.JackpotFullHouse += bucket2;
-            ledger.JackpotStraightFlush = Math.Min(ledger.JackpotStraightFlush + bucket3, 20_000_000);
+            ledger.JackpotFourOfAKindA = Math.Min(ledger.JackpotFourOfAKindA + 100, 999_999);
+            ledger.JackpotFourOfAKindB = Math.Min(ledger.JackpotFourOfAKindB + 100, 999_999);
+            ledger.JackpotFullHouse = Math.Min(ledger.JackpotFullHouse + 100, 25_000_000);
+            ledger.JackpotStraightFlush = Math.Min(ledger.JackpotStraightFlush + 100, 20_000_000);
         }
 
         store.Ledger.Add(new WalletLedgerEntry
@@ -276,25 +260,25 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
                 if (evaluation.Category == HandCategory.FullHouse && evaluation.Tiebreak[0] == ledger.JackpotFullHouseRank)
                 {
                     jackpotWon = ledger.JackpotFullHouse;
-                    ledger.JackpotFullHouse = 25_000_000;
+                    ledger.JackpotFullHouse = 5_000_000;
                 }
                 else if (evaluation.Category == HandCategory.FourOfAKind)
                 {
                     if (round.ActiveFourOfAKindSlotAtDeal == 0)
                     {
                         jackpotWon = ledger.JackpotFourOfAKindA;
-                        ledger.JackpotFourOfAKindA = 200_000;
+                        ledger.JackpotFourOfAKindA = 199_999;
                     }
                     else
                     {
                         jackpotWon = ledger.JackpotFourOfAKindB;
-                        ledger.JackpotFourOfAKindB = 200_000;
+                        ledger.JackpotFourOfAKindB = 199_999;
                     }
                 }
                 else if (evaluation.Category == HandCategory.StraightFlush)
                 {
                     jackpotWon = ledger.JackpotStraightFlush;
-                    ledger.JackpotStraightFlush = 5_000_000;
+                    ledger.JackpotStraightFlush = 4_000_000;
                 }
 
                 if (jackpotWon > 0)
@@ -690,11 +674,11 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
             ledger.RoundsSinceLucky5Hit = 0;
             ledger.LastPayoutScale = 2.37m;
             ledger.LastDistributionMode = DistributionMode.Neutral;
-            ledger.JackpotFullHouse = 25_000_000;
+            ledger.JackpotFullHouse = 5_000_000;
             ledger.JackpotFullHouseRank = 14;
-            ledger.JackpotFourOfAKindA = 200_000;
-            ledger.JackpotFourOfAKindB = 200_000;
-            ledger.JackpotStraightFlush = 5_000_000;
+            ledger.JackpotFourOfAKindA = 199_999;
+            ledger.JackpotFourOfAKindB = 199_999;
+            ledger.JackpotStraightFlush = 4_000_000;
         }
 
         return Task.FromResult<object>(new
