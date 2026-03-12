@@ -67,24 +67,27 @@
 
             <div id="card-area"></div>
 
-            <div id="jackpot-bar">
-                <div class="jackpot-slot jp-4k" data-jp="fourOfAKindA">
-                    <span class="jp-label">4K</span>
-                    <span class="jp-value" id="jp-4k-a-val">0</span>
+            <!-- Large win amount display (clone-style golden outlined number) -->
+            <div id="win-amount-display">
+                <span id="win-slot-tag"></span>
+                <span id="win-amount-value"></span>
+            </div>
+
+            <!-- Machine info & jackpot block (clone-style SERIE/KENT/S/N + counters) -->
+            <div id="machine-info-block">
+                <div id="machine-identity">
+                    <span class="mi-line"><span class="mi-label">SERIE</span> <span class="mi-sep">-</span> <span id="mi-serie" class="mi-val">1</span></span>
+                    <span class="mi-line"><span class="mi-label">KENT</span> <span class="mi-sep">/3 :</span> <span id="mi-kent" class="mi-val">1</span></span>
                 </div>
-                <div class="jackpot-slot jp-fh" data-jp="fullHouse">
-                    <span class="jp-label">FH</span>
-                    <span class="jp-rank" id="jp-fh-rank">A</span>
-                    <span class="jp-value" id="jp-fh-val">0</span>
+                <div id="jackpot-counters">
+                    <span class="jp-counter" id="jp-counter-a"><span class="jp-prefix">×</span> <span class="jp-cval">0</span></span>
+                    <span class="jp-counter" id="jp-counter-center"><span class="jp-cval">0</span></span>
+                    <span class="jp-counter" id="jp-counter-b"><span class="jp-cval">0</span></span>
                 </div>
-                <div class="jackpot-slot jp-4k" data-jp="fourOfAKindB">
-                    <span class="jp-label">4K</span>
-                    <span class="jp-value" id="jp-4k-b-val">0</span>
+                <div id="machine-serial">
+                    <span class="mi-label">S/N:</span> <span id="mi-serial" class="mi-val">0</span>
                 </div>
-                <div class="jackpot-slot jp-sf" data-jp="straightFlush">
-                    <span class="jp-label">SF</span>
-                    <span class="jp-value" id="jp-sf-val">0</span>
-                </div>
+                <div id="bonus-hand-text"></div>
             </div>
 
             <div id="du-info-panel">

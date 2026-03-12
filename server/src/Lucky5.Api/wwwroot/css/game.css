@@ -35,6 +35,8 @@ body {
     overflow: hidden;
 }
 
+/* ─── Auth Screen ─── */
+
 #auth-screen {
     position: absolute;
     inset: 0;
@@ -125,6 +127,8 @@ body {
     min-height: 14px;
 }
 
+/* ─── Game Screen ─── */
+
 #game-screen {
     display: none;
     flex-direction: column;
@@ -134,6 +138,8 @@ body {
 #game-screen.active {
     display: flex;
 }
+
+/* ─── Paytable ─── */
 
 #paytable {
     padding: 6px 12px 2px;
@@ -152,6 +158,7 @@ body {
     border-radius: 4px;
     transition: background 0.2s, transform 0.15s;
     position: relative;
+    border: 2px solid transparent;
 }
 
 .pay-row::after {
@@ -178,6 +185,7 @@ body {
 .pay-row.tok { color: #44ccff; text-shadow: 0 0 4px rgba(68,204,255,0.2); }
 .pay-row.tp { color: #ffff44; text-shadow: 0 0 4px rgba(255,255,68,0.2); }
 
+/* Active hand highlight (win result) */
 .pay-row.active {
     background: rgba(255, 255, 255, 0.12);
     text-shadow: 0 0 10px currentColor;
@@ -189,6 +197,14 @@ body {
     color: #fff;
 }
 
+/* Jackpot-selected row: solid box around the row (like FULL HOUSE in clone) */
+.pay-row.jackpot-selected {
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 3px;
+}
+
+/* Double-up highlight: green pulse */
 .pay-row.du-highlight {
     background: rgba(0, 255, 0, 0.12);
     text-shadow: 0 0 12px #0f0;
@@ -209,6 +225,8 @@ body {
     0%, 100% { background: rgba(0, 255, 0, 0.08); }
     50% { background: rgba(0, 255, 0, 0.22); }
 }
+
+/* ─── Credit & Stake Bar ─── */
 
 #credit-stake-bar {
     display: flex;
@@ -271,6 +289,8 @@ body {
     display: block;
 }
 
+/* ─── Card Area ─── */
+
 #card-area {
     flex: 1;
     display: flex;
@@ -285,6 +305,17 @@ body {
 #card-area.du-mode {
     gap: 2px;
     justify-content: center;
+}
+
+/* Single centered card in DU (clone shows one large card) */
+#card-area.du-single-card {
+    justify-content: center;
+    align-items: center;
+}
+
+#card-area.du-single-card .du-card-slot {
+    width: 35%;
+    max-width: 180px;
 }
 
 .card-slot {
@@ -360,124 +391,143 @@ body {
     box-shadow: 0 0 14px rgba(255,215,0,0.4);
 }
 
-#jackpot-bar {
+/* ─── Win Amount Display (clone golden number) ─── */
+
+#win-amount-display {
+    text-align: center;
+    padding: 2px 12px;
+    min-height: 20px;
+    flex-shrink: 0;
     display: flex;
-    justify-content: center;
     align-items: center;
-    gap: 4px;
-    padding: 3px 8px;
+    justify-content: center;
+    gap: 8px;
+}
+
+#win-amount-display.visible {
+    min-height: 28px;
+}
+
+#win-slot-tag {
+    font-size: 12px;
+    color: #FFD700;
+    text-shadow: 0 0 6px rgba(255,215,0,0.7);
+    font-weight: bold;
+    min-width: 16px;
+}
+
+#win-amount-value {
+    font-size: 22px;
+    color: #FFD700;
+    text-shadow:
+        -1px -1px 0 #8B6914,
+        1px -1px 0 #8B6914,
+        -1px 1px 0 #8B6914,
+        1px 1px 0 #8B6914,
+        0 0 12px rgba(255,215,0,0.6),
+        0 0 24px rgba(255,215,0,0.3);
+    letter-spacing: 1px;
+    font-weight: bold;
+}
+
+/* ─── Machine Info & Jackpot Block ─── */
+
+#machine-info-block {
+    padding: 2px 12px 4px;
     flex-shrink: 0;
     background: rgba(0,0,0,0.2);
 }
 
-.jackpot-slot {
+#machine-identity {
     display: flex;
-    align-items: center;
-    gap: 3px;
-    padding: 2px 6px;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    transition: all 0.4s ease;
-    position: relative;
-    overflow: hidden;
+    justify-content: flex-start;
+    gap: 16px;
+    padding: 1px 4px;
 }
 
-.jackpot-slot::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 4px;
-    opacity: 0;
-    transition: opacity 0.4s;
+.mi-line {
+    font-size: 11px;
+    letter-spacing: 0.5px;
 }
 
-.jackpot-slot .jp-label {
-    font-size: 8px;
+.mi-label {
+    color: #44ff44;
+    text-shadow: 0 0 4px rgba(68,255,68,0.3);
+}
+
+.mi-sep {
+    color: #44ff44;
     opacity: 0.7;
+}
+
+.mi-val {
+    color: #fff;
+    font-size: 12px;
+}
+
+#jackpot-counters {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    padding: 3px 4px;
+}
+
+.jp-counter {
+    font-size: 14px;
+    color: #e8a020;
+    text-shadow: 0 0 8px rgba(232,160,32,0.5);
     letter-spacing: 0.5px;
 }
 
-.jackpot-slot .jp-value {
+.jp-prefix {
     font-size: 11px;
-    letter-spacing: 0.5px;
+    opacity: 0.8;
+    margin-right: 2px;
 }
 
-.jackpot-slot .jp-rank {
-    font-size: 11px;
+.jp-cval {
+    font-weight: bold;
+}
+
+#jp-counter-center {
+    font-size: 15px;
     color: #FFD700;
-    text-shadow: 0 0 6px rgba(255,215,0,0.7);
-    padding: 0 3px;
-    border: 1px solid #FFD700;
-    border-radius: 3px;
-    min-width: 16px;
+    text-shadow: 0 0 10px rgba(255,215,0,0.6);
+}
+
+#machine-serial {
+    padding: 1px 4px;
+    font-size: 11px;
+}
+
+#machine-serial .mi-label {
+    color: #44ff44;
+}
+
+#machine-serial .mi-val {
+    color: #FFD700;
+    font-size: 12px;
+    text-shadow: 0 0 4px rgba(255,215,0,0.4);
+}
+
+#bonus-hand-text {
     text-align: center;
+    font-size: 14px;
+    color: #fff;
+    letter-spacing: 2px;
+    padding: 2px 0;
+    text-shadow: 0 0 6px rgba(255,255,255,0.3);
+    min-height: 18px;
 }
 
-.jackpot-slot.jp-4k {
-    border-color: rgba(68,204,255,0.25);
-    background: rgba(68,204,255,0.03);
-}
-.jackpot-slot.jp-4k .jp-label,
-.jackpot-slot.jp-4k .jp-value {
-    color: #44ccff;
+/* ─── Old jackpot bar (kept for backward compatibility, hidden by default) ─── */
+
+#jackpot-bar {
+    display: none;
 }
 
-.jackpot-slot.jp-fh {
-    border-color: rgba(255,255,68,0.25);
-    background: rgba(255,255,68,0.03);
-}
-.jackpot-slot.jp-fh .jp-label,
-.jackpot-slot.jp-fh .jp-value {
-    color: #ffff44;
-}
-
-.jackpot-slot.jp-sf {
-    border-color: rgba(255,136,68,0.25);
-    background: rgba(255,136,68,0.03);
-}
-.jackpot-slot.jp-sf .jp-label,
-.jackpot-slot.jp-sf .jp-value {
-    color: #ff8844;
-}
-
-.jackpot-slot.jp-active {
-    animation: jp-glow 1.2s ease-in-out infinite;
-}
-
-.jackpot-slot.jp-4k.jp-active {
-    border-color: #44ccff;
-    box-shadow: 0 0 10px rgba(68,204,255,0.4), inset 0 0 6px rgba(68,204,255,0.1);
-    background: rgba(68,204,255,0.08);
-}
-
-.jackpot-slot.jp-4k.jp-active .jp-value {
-    text-shadow: 0 0 8px rgba(68,204,255,0.8);
-}
-
-.jackpot-slot.jp-fh.jp-active {
-    border-color: #ffff44;
-    box-shadow: 0 0 10px rgba(255,255,68,0.4), inset 0 0 6px rgba(255,255,68,0.1);
-    background: rgba(255,255,68,0.08);
-}
-
-.jackpot-slot.jp-fh.jp-active .jp-value {
-    text-shadow: 0 0 8px rgba(255,255,68,0.8);
-}
-
-.jackpot-slot.jp-sf.jp-active {
-    border-color: #ff8844;
-    box-shadow: 0 0 10px rgba(255,136,68,0.4), inset 0 0 6px rgba(255,136,68,0.1);
-    background: rgba(255,136,68,0.08);
-}
-
-.jackpot-slot.jp-sf.jp-active .jp-value {
-    text-shadow: 0 0 8px rgba(255,136,68,0.8);
-}
-
-@keyframes jp-glow {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.65; }
-}
+/* ─── DU Cards ─── */
 
 .du-card-slot {
     position: relative;
@@ -532,6 +582,8 @@ body {
     animation: shuffle-card 0.3s ease-in-out infinite;
 }
 
+/* ─── DU Info Panel ─── */
+
 #du-info-panel {
     display: none;
     padding: 2px 12px;
@@ -560,6 +612,8 @@ body {
     font-size: 10px;
     text-shadow: 0 0 6px rgba(0,255,0,0.3);
 }
+
+/* ─── Info Bar / Messages ─── */
 
 #info-bar {
     text-align: center;
@@ -611,6 +665,8 @@ body {
     text-shadow: 0 0 8px rgba(255,215,0,0.5);
 }
 
+/* ─── Lucky5 Flash ─── */
+
 #lucky5-flash {
     display: none;
     position: absolute;
@@ -631,11 +687,13 @@ body {
     100% { background: transparent; }
 }
 
+/* ─── Controls ─── */
+
 #controls {
-    padding: 4px 8px 6px;
-    background: linear-gradient(180deg, #1a1008, #0d0804);
+    padding: 6px 8px 8px;
+    background: linear-gradient(180deg, #2a1a0c 0%, #1e1208 40%, #150e06 100%);
     flex-shrink: 0;
-    border-top: 1px solid rgba(255,215,0,0.12);
+    border-top: 1px solid rgba(255,215,0,0.15);
 }
 
 #hold-row {
@@ -700,6 +758,7 @@ body {
     filter: none;
 }
 
+/* HOLD buttons: amber */
 .cab-hold {
     width: 17%;
     max-width: 72px;
@@ -715,6 +774,7 @@ body {
     box-shadow: 0 3px 0 #8B6914, 0 0 14px rgba(255,215,0,0.5);
 }
 
+/* BIG / SMALL: amber */
 .cab-big, .cab-small {
     width: 17%;
     max-width: 72px;
@@ -725,6 +785,7 @@ body {
     font-size: 11px;
 }
 
+/* CANCEL HOLD: cream */
 .cab-cancel {
     width: 17%;
     max-width: 72px;
@@ -735,26 +796,29 @@ body {
     font-size: 9px;
 }
 
+/* DEAL DRAW: RED (Lebanese cabinet convention — NOT green!) */
 .cab-deal {
-    width: 17%;
-    max-width: 72px;
-    height: 42px;
-    background: linear-gradient(180deg, #44cc44, #228822);
-    color: #fff;
-    box-shadow: 0 3px 0 #115511, 0 4px 10px rgba(0,0,0,0.5);
-    font-size: 10px;
-}
-
-.cab-bet {
     width: 17%;
     max-width: 72px;
     height: 42px;
     background: linear-gradient(180deg, #ee4444, #cc2222);
     color: #fff;
     box-shadow: 0 3px 0 #881111, 0 4px 10px rgba(0,0,0,0.5);
+    font-size: 10px;
+}
+
+/* BET: GREEN (Lebanese cabinet convention — NOT red!) */
+.cab-bet {
+    width: 17%;
+    max-width: 72px;
+    height: 42px;
+    background: linear-gradient(180deg, #44cc44, #228822);
+    color: #fff;
+    box-shadow: 0 3px 0 #115511, 0 4px 10px rgba(0,0,0,0.5);
     font-size: 11px;
 }
 
+/* TAKE HALF: red */
 .cab-takehalf {
     width: 22%;
     max-width: 90px;
@@ -765,6 +829,7 @@ body {
     font-size: 10px;
 }
 
+/* MENU: dark circle */
 .cab-menu {
     width: 14%;
     max-width: 50px;
@@ -778,15 +843,18 @@ body {
 
 .cab-menu::after { display: none; }
 
+/* TAKE SCORE: orange/amber (brighter than HOLD) */
 .cab-takescore {
     width: 22%;
     max-width: 90px;
     height: 40px;
-    background: linear-gradient(180deg, #e8a020, #b87818);
+    background: linear-gradient(180deg, #f0a830, #d08820);
     color: #000;
-    box-shadow: 0 3px 0 #7a4a0a, 0 4px 10px rgba(0,0,0,0.5);
+    box-shadow: 0 3px 0 #8a5a10, 0 4px 10px rgba(0,0,0,0.5);
     font-size: 10px;
 }
+
+/* ─── Card Animations ─── */
 
 @keyframes deal-in {
     from {
@@ -825,4 +893,45 @@ body {
 
 .credit-ticking span {
     animation: credit-tick 0.12s ease-in-out;
+}
+
+/* ─── Jackpot slot legacy (for any remaining references) ─── */
+
+.jackpot-slot {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 6px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.jackpot-slot .jp-label {
+    font-size: 8px;
+    opacity: 0.7;
+    letter-spacing: 0.5px;
+}
+
+.jackpot-slot .jp-value {
+    font-size: 11px;
+    letter-spacing: 0.5px;
+}
+
+.jackpot-slot .jp-rank {
+    font-size: 11px;
+    color: #FFD700;
+    text-shadow: 0 0 6px rgba(255,215,0,0.7);
+    padding: 0 3px;
+    border: 1px solid #FFD700;
+    border-radius: 3px;
+    min-width: 16px;
+    text-align: center;
+}
+
+@keyframes jp-glow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.65; }
 }

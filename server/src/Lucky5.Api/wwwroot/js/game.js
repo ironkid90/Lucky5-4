@@ -21,6 +21,9 @@ let handsPlayed = 0;
 let currentHandRank = null;
 let jackpotRank = 14;
 let active4kSlot = 0;
+let machineSerial = 0;
+let machineSerie = 1;
+let machineKent = 1;
 
 const MACHINE_CREDIT_LIMIT = 50000000;
 
@@ -148,18 +151,37 @@ function updateJackpotDisplay(jp) {
     }
     if (!jackpots) return;
 
-    const el4kA = $('#jp-4k-a-val');
-    const el4kB = $('#jp-4k-b-val');
-    const elFh = $('#jp-fh-val');
-    const elSf = $('#jp-sf-val');
-    const elRank = $('#jp-fh-rank');
+    // New machine-info-block jackpot counters
+    const jpA = document.querySelector('#jp-counter-a .jp-cval');
+    const jpCenter = document.querySelector('#jp-counter-center .jp-cval');
+    const jpB = document.querySelector('#jp-counter-b .jp-cval');
+    if (jpA) jpA.textContent = formatNum(jackpots.fourOfAKindA || 0);
+    if (jpCenter) jpCenter.textContent = formatNum(jackpots.fullHouse || 0);
+    if (jpB) jpB.textContent = formatNum(jackpots.straightFlush || 0);
+
+    // Machine serial (sum of jackpots as stand-in)
+    const serialEl = document.getElementById('mi-serial');
+    if (serialEl) {
+        machineSerial = (jackpots.fourOfAKindA || 0) + (jackpots.fourOfAKindB || 0);
+        serialEl.textContent = formatNum(machineSerial);
+    }
+
+    // Update Full House rank display (jackpot-selected highlight on paytable)
+    const rankEl = document.getElementById('jp-fh-rank');
+    if (rankEl) rankEl.textContent = RANK_NAMES[jackpotRank] || 'A';
+    updateJackpotSelectedRow();
+    updateActive4kHighlight();
+    updateBonusHandText();
+
+    // Legacy jackpot bar (if elements exist)
+    const el4kA = document.getElementById('jp-4k-a-val');
+    const el4kB = document.getElementById('jp-4k-b-val');
+    const elFh = document.getElementById('jp-fh-val');
+    const elSf = document.getElementById('jp-sf-val');
     if (el4kA) el4kA.textContent = formatNum(jackpots.fourOfAKindA || 0);
     if (el4kB) el4kB.textContent = formatNum(jackpots.fourOfAKindB || 0);
     if (elFh) elFh.textContent = formatNum(jackpots.fullHouse || 0);
     if (elSf) elSf.textContent = formatNum(jackpots.straightFlush || 0);
-    if (elRank) elRank.textContent = RANK_NAMES[jackpotRank] || 'A';
-
-    updateActive4kHighlight();
 }
 
 function updateActive4kHighlight() {
@@ -173,18 +195,53 @@ function updateActive4kHighlight() {
     });
 }
 
-function updateBonusBar(handRank, jackpotWon) {
-    const el = $('#bonus-text');
-    if (jackpotWon > 0) {
-        el.textContent = `JACKPOT WON! +${formatNum(jackpotWon)}`;
-    } else if (handRank && JACKPOT_HANDS.includes(handRank)) {
-        if (handRank === 'FullHouse') {
-            el.textContent = `FH ${RANK_NAMES[jackpotRank]} JACKPOT`;
-        } else {
-            el.textContent = `${HAND_DISPLAY[handRank]} JACKPOT`;
-        }
+function updateJackpotSelectedRow() {
+    // Show solid box around the active jackpot hand in paytable (like clone's FULL HOUSE highlight)
+    document.querySelectorAll('.pay-row').forEach(row => row.classList.remove('jackpot-selected'));
+    const fhRow = document.querySelector('.pay-row.fh');
+    if (fhRow) fhRow.classList.add('jackpot-selected');
+}
+
+function updateBonusHandText() {
+    const el = document.getElementById('bonus-hand-text');
+    if (!el) return;
+    if (active4kSlot === 0 || active4kSlot === 1) {
+        el.textContent = '4  OF  A  KIND    WINS  BONUS';
     } else {
         el.textContent = '';
+    }
+}
+
+function updateWinAmountDisplay(amount, slotTag) {
+    const valEl = document.getElementById('win-amount-value');
+    const tagEl = document.getElementById('win-slot-tag');
+    const container = document.getElementById('win-amount-display');
+    if (!valEl || !container) return;
+    if (amount > 0) {
+        valEl.textContent = formatNum(amount);
+        if (tagEl) tagEl.textContent = slotTag || '';
+        container.classList.add('visible');
+    } else {
+        valEl.textContent = '';
+        if (tagEl) tagEl.textContent = '';
+        container.classList.remove('visible');
+    }
+}
+
+function updateBonusBar(handRank, jackpotWon) {
+    const el = document.getElementById('bonus-text');
+    const handTextEl = document.getElementById('bonus-hand-text');
+    if (jackpotWon > 0) {
+        if (el) el.textContent = `JACKPOT WON! +${formatNum(jackpotWon)}`;
+        if (handTextEl) handTextEl.textContent = `JACKPOT WON! +${formatNum(jackpotWon)}`;
+    } else if (handRank && JACKPOT_HANDS.includes(handRank)) {
+        const msg = handRank === 'FullHouse'
+            ? `FH ${RANK_NAMES[jackpotRank]} JACKPOT`
+            : `${HAND_DISPLAY[handRank]} JACKPOT`;
+        if (el) el.textContent = msg;
+    } else {
+        if (el) el.textContent = '';
+        updateBonusHandText();
     }
 }
 
@@ -496,6 +553,7 @@ async function doDeal() {
             balance = result.walletBalanceAfterBet;
             if (result.jackpots) updateJackpotDisplay(result.jackpots);
             updateCredits();
+            updateWinAmountDisplay(0);
             holdIndexes.clear();
             renderCards(cards, true);
             $$('.cab-hold').forEach(btn => btn.classList.remove('active'));
@@ -568,6 +626,7 @@ async function doDeal() {
                     flashWinCards();
                     updateBonusBar(handName, result.jackpotWon);
                     updateWinIndicator(winAmount);
+                    updateWinAmountDisplay(winAmount, active4kSlot === 0 ? 'A' : 'B');
                     gameState = 'win';
                     setButtonStates();
 
@@ -581,6 +640,7 @@ async function doDeal() {
                     gameState = 'idle';
                     setButtonStates();
                     updatePaytable();
+                    updateWinAmountDisplay(0);
                 }
             }, 500);
         } catch (e) {
@@ -678,6 +738,7 @@ async function startDoubleUpFlow() {
 
         showDuInfo();
         showMessage(`DOUBLE UP - WIN: ${formatNum(result.currentAmount)}`, 'win');
+        updateWinAmountDisplay(result.currentAmount, active4kSlot === 0 ? 'A' : 'B');
         updateWinIndicator(result.currentAmount);
         if (currentHandRank) highlightPaytableDU(currentHandRank, result.currentAmount);
         renderDoubleUpCards(result.dealerCard, false, null);
@@ -711,6 +772,7 @@ async function doDoubleUp(guess) {
                 balance = result.walletBalance;
                 updateCredits();
                 updateWinIndicator(winAmount);
+                updateWinAmountDisplay(winAmount, active4kSlot === 0 ? 'A' : 'B');
                 if (currentHandRank) highlightPaytableDU(currentHandRank, winAmount);
                 showMessage(`WIN! ${formatNum(winAmount)} - DOUBLE AGAIN?`, 'win');
                 gameState = 'doubleup';
@@ -728,6 +790,7 @@ async function doDoubleUp(guess) {
                 balance = result.walletBalance;
                 updateCredits();
                 updateWinIndicator(winAmount);
+                updateWinAmountDisplay(winAmount, active4kSlot === 0 ? 'A' : 'B');
                 showMessage(`SAFE! ${formatNum(winAmount)} BANKED`, 'win');
                 gameState = 'win';
                 setTimeout(() => exitDoubleUp(), 1200);
@@ -736,6 +799,7 @@ async function doDoubleUp(guess) {
                 balance = result.walletBalance;
                 updateCredits();
                 updateWinIndicator(winAmount);
+                updateWinAmountDisplay(winAmount, active4kSlot === 0 ? 'A' : 'B');
                 showMessage('MACHINE CLOSED - MAX CREDITS!', 'win');
                 gameState = 'win';
                 setTimeout(() => exitDoubleUp(), 1200);
@@ -744,6 +808,7 @@ async function doDoubleUp(guess) {
                 balance = result.walletBalance;
                 updateCredits();
                 updateWinIndicator(0);
+                updateWinAmountDisplay(0);
                 showMessage('YOU LOSE!', 'lose');
                 setTimeout(() => exitDoubleUp(), 1000);
             }
@@ -761,6 +826,7 @@ function exitDoubleUp() {
     duSessionStarted = false;
     duIsNoLoseActive = false;
     $('#lucky5-flash').classList.remove('active');
+    updateWinAmountDisplay(0);
 
     if (winAmount > 0) {
         gameState = 'win';
@@ -831,6 +897,7 @@ async function mainTakeScore() {
     gameState = 'idle';
     updatePaytable();
     updateBonusBar(null);
+    updateWinAmountDisplay(0);
     currentHandRank = null;
     renderCards([null, null, null, null, null], false);
 
@@ -879,6 +946,7 @@ async function mainTakeHalf() {
             setButtonStates();
             updatePaytable();
             updateBonusBar(null);
+            updateWinAmountDisplay(0);
             showMessage('PLACE YOUR BET');
             renderCards([null, null, null, null, null], false);
         } else {
@@ -983,6 +1051,8 @@ async function initGame() {
         updateCredits();
         updateStakeDisplay();
         updatePaytable();
+        updateJackpotSelectedRow();
+        updateBonusHandText();
         showMessage('PLACE YOUR BET');
         gameState = 'idle';
         setButtonStates();
