@@ -1,5 +1,213 @@
 import './_group.css';
 
+function ArcadeCabinet() {
+  return (
+    <div style={{
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      width: 420,
+      height: 700,
+      pointerEvents: 'none',
+      opacity: 0.12,
+    }}>
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 30,
+        right: 30,
+        height: 40,
+        background: 'linear-gradient(180deg, #8B6914 0%, #5a4410 100%)',
+        borderRadius: '12px 12px 0 0',
+        boxShadow: '0 0 20px rgba(139,105,20,0.3)',
+      }} />
+
+      <div style={{
+        position: 'absolute',
+        top: 38,
+        left: 20,
+        right: 20,
+        height: 320,
+        background: '#0a0a0a',
+        border: '3px solid #8B6914',
+        borderRadius: '4px',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          position: 'absolute',
+          top: 8,
+          left: 8,
+          right: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 3,
+        }}>
+          {['ROYAL FLUSH', 'STRAIGHT FLUSH', '4 OF A KIND', 'FULL HOUSE', 'FLUSH', 'STRAIGHT', '3 OF A KIND', '2 PAIR'].map((hand, i) => (
+            <div key={i} style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              fontFamily: "'Arcade', monospace",
+              fontSize: 7,
+              color: ['#f44', '#f80', '#0c0', '#ff0', '#08f', '#0cc', '#0c0', '#0cc'][i],
+              opacity: 0.9,
+              letterSpacing: 0.5,
+            }}>
+              <span>{hand}</span>
+              <span>{[5000000, 375000, 75000, 60000, 50000, 40000, 15000, 10000][i].toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+
+        <div style={{
+          position: 'absolute',
+          top: 100,
+          left: 10,
+          right: 10,
+          display: 'flex',
+          justifyContent: 'center',
+          gap: 6,
+        }}>
+          {['♠','♥','♣','♦','♠'].map((suit, i) => (
+            <div key={i} style={{
+              width: 50,
+              height: 70,
+              background: '#fff',
+              borderRadius: 3,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 22,
+              color: suit === '♥' || suit === '♦' ? '#c00' : '#000',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+            }}>
+              {suit}
+            </div>
+          ))}
+        </div>
+
+        <div style={{
+          position: 'absolute',
+          bottom: 10,
+          left: 10,
+          right: 10,
+          display: 'flex',
+          justifyContent: 'space-between',
+          fontFamily: "'Arcade', monospace",
+          fontSize: 8,
+        }}>
+          <span style={{ color: '#0f0' }}>CREDIT 121,200</span>
+          <span style={{ color: '#ff0' }}>STAKE 5,000</span>
+        </div>
+      </div>
+
+      <div style={{
+        position: 'absolute',
+        top: 365,
+        left: 10,
+        right: 10,
+        height: 200,
+        background: 'linear-gradient(180deg, #3d2815 0%, #2a1a0d 50%, #1f130a 100%)',
+        borderRadius: '0 0 4px 4px',
+        border: '2px solid #5a4410',
+        borderTop: 'none',
+      }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(5, 1fr)',
+          gap: 8,
+          padding: '20px 15px 10px',
+        }}>
+          {Array(5).fill(null).map((_, i) => (
+            <div key={i} style={{
+              height: 30,
+              background: 'linear-gradient(180deg, #c9a227, #8B6914)',
+              borderRadius: 4,
+              boxShadow: '0 2px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2)',
+            }} />
+          ))}
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(5, 1fr)',
+          gap: 8,
+          padding: '0 15px 10px',
+        }}>
+          {[
+            { bg: 'linear-gradient(180deg, #e44, #a22)', label: 'BIG' },
+            { bg: 'linear-gradient(180deg, #e44, #a22)', label: 'SML' },
+            { bg: 'linear-gradient(180deg, #c9a227, #8B6914)', label: '' },
+            { bg: 'linear-gradient(180deg, #c9a227, #8B6914)', label: '' },
+            { bg: 'linear-gradient(180deg, #4a4, #282)', label: 'BET' },
+          ].map((btn, i) => (
+            <div key={i} style={{
+              height: 36,
+              background: btn.bg,
+              borderRadius: 4,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontFamily: "'Arcade', monospace",
+              fontSize: 6,
+              color: '#fff',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15)',
+              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+            }}>
+              {btn.label}
+            </div>
+          ))}
+        </div>
+
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: 12,
+          padding: '6px 15px',
+        }}>
+          {[
+            { bg: 'linear-gradient(180deg, #e44, #a22)', w: 50 },
+            { bg: 'linear-gradient(180deg, #333, #222)', w: 30 },
+            { bg: 'linear-gradient(180deg, #e44, #a22)', w: 50 },
+          ].map((btn, i) => (
+            <div key={i} style={{
+              width: btn.w,
+              height: 30,
+              background: btn.bg,
+              borderRadius: i === 1 ? '50%' : 4,
+              boxShadow: '0 2px 4px rgba(0,0,0,0.4)',
+            }} />
+          ))}
+        </div>
+      </div>
+
+      <div style={{
+        position: 'absolute',
+        top: 565,
+        left: 40,
+        right: 40,
+        height: 120,
+        background: 'linear-gradient(180deg, #2a1a0d 0%, #1a0f06 100%)',
+        borderRadius: '0 0 20px 20px',
+        border: '2px solid #3d2815',
+        borderTop: 'none',
+      }}>
+        <div style={{
+          position: 'absolute',
+          top: 20,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 60,
+          height: 8,
+          background: '#111',
+          borderRadius: 4,
+          border: '1px solid #333',
+        }} />
+      </div>
+    </div>
+  );
+}
+
 export function Refined() {
   return (
     <div style={{
@@ -23,6 +231,10 @@ export function Refined() {
           0% { border-color: #8B6914; }
           50% { border-color: #c9a227; }
           100% { border-color: #8B6914; }
+        }
+        @keyframes cabinetGlow {
+          0%, 100% { opacity: 0.10; }
+          50% { opacity: 0.16; }
         }
         .refined-input {
           width: 100%;
@@ -73,16 +285,20 @@ export function Refined() {
       <div style={{
         position: 'absolute',
         inset: 0,
-        background: 'radial-gradient(ellipse at 50% 30%, rgba(139,105,20,0.06) 0%, transparent 60%)',
+        background: 'radial-gradient(ellipse at 50% 40%, rgba(139,105,20,0.08) 0%, transparent 55%)',
         pointerEvents: 'none',
       }} />
+
+      <div style={{ animation: 'cabinetGlow 5s ease-in-out infinite' }}>
+        <ArcadeCabinet />
+      </div>
 
       <div style={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         position: 'relative',
-        zIndex: 1,
+        zIndex: 10,
       }}>
         <img
           src="/__mockup/images/lucky5.png"
@@ -105,8 +321,9 @@ export function Refined() {
           padding: '36px 32px 28px',
           textAlign: 'center',
           position: 'relative',
-          boxShadow: '0 0 40px rgba(139,105,20,0.12), inset 0 1px 0 rgba(255,215,0,0.08)',
+          boxShadow: '0 0 40px rgba(139,105,20,0.12), 0 0 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,215,0,0.08)',
           animation: 'borderShimmer 4s ease-in-out infinite',
+          backdropFilter: 'blur(8px)',
         }}>
           <div style={{
             position: 'absolute',
