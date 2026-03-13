@@ -535,6 +535,7 @@ export function Lucky5Cabinet() {
                       className={`hold-button ${holdIndexes.includes(index) ? "active" : ""}`}
                       type="button"
                       aria-label={holdIndexes.includes(index) ? `Held card ${index + 1}` : `Hold card ${index + 1}`}
+                      aria-pressed={holdIndexes.includes(index)}
                       onClick={() => toggleHold(index)}
                       disabled={!dealResult || !!drawResult || busy}
                     >
