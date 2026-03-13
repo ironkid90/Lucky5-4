@@ -1288,3 +1288,520 @@ body {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.75; transform: scale(1.03); }
 }
+
+#lobby-screen {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #0a0a0a;
+    z-index: 95;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#lobby-screen.active {
+    display: flex;
+}
+
+.lobby-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: linear-gradient(180deg, #1a1200 0%, #0d0900 100%);
+    border-bottom: 2px solid #8B6914;
+    flex-shrink: 0;
+    min-height: 56px;
+}
+
+.lobby-balance-box {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.lobby-balance-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: #888;
+    letter-spacing: 2px;
+}
+
+.lobby-balance-value {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    color: #0f0;
+    text-shadow: 0 0 8px rgba(0,255,0,0.5);
+    letter-spacing: 1px;
+}
+
+.lobby-user-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.lobby-username {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: #d4af37;
+    letter-spacing: 1px;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lobby-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    padding: 10px 18px;
+    background: linear-gradient(180deg, #FFD700 0%, #c9a227 40%, #B8860B 100%);
+    border: 1px solid rgba(255,215,0,0.3);
+    border-radius: 6px;
+    color: #1a0f00;
+    cursor: pointer;
+    letter-spacing: 1px;
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4), 0 1px 4px rgba(255,215,0,0.2);
+    transition: all 0.15s;
+}
+
+.lobby-btn:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+.lobby-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+
+.lobby-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    filter: grayscale(0.6);
+}
+
+.lobby-btn-sm {
+    font-size: 7px;
+    padding: 8px 14px;
+    min-height: 44px;
+}
+
+.lobby-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.lobby-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.lobby-section-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: #FFD700;
+    letter-spacing: 3px;
+    text-shadow: 0 0 10px rgba(255,215,0,0.3);
+}
+
+.lobby-game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.game-card {
+    background: linear-gradient(180deg, rgba(50,32,14,0.95) 0%, rgba(20,12,4,0.98) 100%);
+    border: 2px solid #8B6914;
+    border-radius: 10px;
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    min-height: 160px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,215,0,0.1);
+}
+
+.game-card:hover {
+    border-color: #FFD700;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.6), 0 0 20px rgba(255,215,0,0.15);
+}
+
+.game-card:active {
+    transform: translateY(0);
+}
+
+.game-card.unavailable {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.game-card.unavailable:hover {
+    transform: none;
+    border-color: #8B6914;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,215,0,0.1);
+}
+
+.game-card-icon {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(139,105,20,0.4);
+}
+
+.game-card-icon img {
+    width: 48px;
+    height: 48px;
+    image-rendering: pixelated;
+}
+
+.game-card-name {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    color: #FFD700;
+    text-align: center;
+    letter-spacing: 1px;
+    text-shadow: 0 0 8px rgba(255,215,0,0.3);
+}
+
+.game-card-badge {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.game-card-badge.playable {
+    background: linear-gradient(180deg, #0a0, #070);
+    color: #fff;
+    border: 1px solid #0c0;
+    box-shadow: 0 0 6px rgba(0,255,0,0.3);
+}
+
+.game-card-badge.coming-soon {
+    background: linear-gradient(180deg, #555, #333);
+    color: #aaa;
+    border: 1px solid #666;
+}
+
+.lobby-wallet-summary {
+    background: linear-gradient(180deg, rgba(50,32,14,0.95) 0%, rgba(20,12,4,0.98) 100%);
+    border: 2px solid #8B6914;
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.lobby-wallet-bal {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.lobby-wallet-bal-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: #888;
+    letter-spacing: 2px;
+}
+
+.lobby-wallet-bal-value {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    color: #0f0;
+    text-shadow: 0 0 8px rgba(0,255,0,0.5);
+}
+
+.lobby-nav-bar {
+    display: flex;
+    border-top: 2px solid #8B6914;
+    background: linear-gradient(180deg, #1a1200 0%, #0d0900 100%);
+    flex-shrink: 0;
+}
+
+.lobby-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 10px 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    font-family: 'Press Start 2P', monospace;
+    min-height: 50px;
+    transition: color 0.2s;
+}
+
+.lobby-nav-item.active {
+    color: #FFD700;
+}
+
+.lobby-nav-icon {
+    font-size: 16px;
+}
+
+.lobby-nav-label {
+    font-size: 7px;
+    letter-spacing: 1px;
+}
+
+#wallet-screen {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #0a0a0a;
+    z-index: 96;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#wallet-screen.active {
+    display: flex;
+}
+
+.wallet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: linear-gradient(180deg, #1a1200 0%, #0d0900 100%);
+    border-bottom: 2px solid #8B6914;
+    flex-shrink: 0;
+    min-height: 56px;
+}
+
+.wallet-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    color: #FFD700;
+    letter-spacing: 3px;
+    text-shadow: 0 0 10px rgba(255,215,0,0.3);
+}
+
+.wallet-spacer {
+    width: 80px;
+}
+
+.wallet-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.wallet-balance-card {
+    background: linear-gradient(180deg, rgba(50,32,14,0.95) 0%, rgba(20,12,4,0.98) 100%);
+    border: 2px solid #8B6914;
+    border-radius: 10px;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6), 0 0 20px rgba(139,105,20,0.1);
+}
+
+.wallet-balance-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: #888;
+    letter-spacing: 2px;
+}
+
+.wallet-balance-amount {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 20px;
+    color: #0f0;
+    text-shadow: 0 0 12px rgba(0,255,0,0.6);
+    letter-spacing: 2px;
+}
+
+.wallet-deposit-withdraw {
+    display: flex;
+    gap: 12px;
+}
+
+.wallet-action-btn {
+    flex: 1;
+}
+
+.wallet-coming-soon {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: #666;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+.wallet-history-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    color: #FFD700;
+    letter-spacing: 2px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(139,105,20,0.3);
+}
+
+.wallet-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.wallet-history-empty {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: #555;
+    text-align: center;
+    padding: 20px 0;
+}
+
+.wallet-history-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(139,105,20,0.2);
+    border-radius: 6px;
+    min-height: 44px;
+}
+
+.wallet-history-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.wallet-history-type {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: #d4af37;
+    letter-spacing: 1px;
+}
+
+.wallet-history-date {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6px;
+    color: #666;
+}
+
+.wallet-history-amount {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+}
+
+.wallet-history-amount.positive {
+    color: #0f0;
+}
+
+.wallet-history-amount.negative {
+    color: #f44;
+}
+
+#game-back-bar {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    z-index: 50;
+}
+
+@media (min-width: 768px) {
+    .lobby-game-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+
+    .lobby-body {
+        padding: 24px 32px;
+        max-width: 960px;
+        margin: 0 auto;
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 24px;
+    }
+
+    .lobby-section {
+        flex: 1;
+        min-width: 300px;
+    }
+
+    .wallet-body {
+        padding: 24px 32px;
+        max-width: 600px;
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    .lobby-wallet-summary {
+        padding: 20px 24px;
+    }
+}
+
+@media (max-width: 359px) {
+    .lobby-balance-value,
+    .lobby-wallet-bal-value {
+        font-size: 11px;
+    }
+
+    .lobby-username {
+        max-width: 80px;
+        font-size: 7px;
+    }
+
+    .game-card {
+        min-height: 130px;
+        padding: 12px 8px;
+    }
+
+    .game-card-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 28px;
+    }
+
+    .game-card-name {
+        font-size: 7px;
+    }
+
+    .wallet-balance-amount {
+        font-size: 16px;
+    }
+}

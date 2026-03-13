@@ -7,4 +7,5 @@ public sealed record MemberProfileDto(
     string Email,
     string PhoneNumber,
     decimal WalletBalance,
-    DateTime LastSeenUtc);
+    DateTime LastSeenUtc,
+    string Role = "player");
