@@ -100,6 +100,27 @@ public static class CleanRoomEngineTests
         Assert(failures, "Bonus Poker reference should flag four-of-a-kind jackpot lineage", CabinetReferences.BonusPoker.GetJackpotFeature(HandCategory.FourOfAKind) is not null);
         Assert(failures, "Bonus Poker reference should flag straight-flush jackpot lineage", CabinetReferences.BonusPoker.GetJackpotFeature(HandCategory.StraightFlush) is not null);
 
+        var fhKingsTrips = FiveCardDrawEngine.EvaluateHand(FiveCardDrawEngine.ParseCards(["KH", "KD", "KC", "JH", "JS"]));
+        Assert(failures, "Full House K-K-K-J-J should have Tiebreak[0] == 13 (Kings trips)", fhKingsTrips.Category == HandCategory.FullHouse && fhKingsTrips.Tiebreak[0] == 13);
+
+        var fhJacksTrips = FiveCardDrawEngine.EvaluateHand(FiveCardDrawEngine.ParseCards(["JH", "JD", "JC", "KH", "KS"]));
+        Assert(failures, "Full House J-J-J-K-K should have Tiebreak[0] == 11 (Jacks trips)", fhJacksTrips.Category == HandCategory.FullHouse && fhJacksTrips.Tiebreak[0] == 11);
+
+        const int jackpotFullHouseRankKings = 13;
+        Assert(failures, "Full House K-K-K-J-J should trigger jackpot when JackpotFullHouseRank is Kings",
+            fhKingsTrips.Tiebreak[0] == jackpotFullHouseRankKings);
+        Assert(failures, "Full House J-J-J-K-K should NOT trigger jackpot when JackpotFullHouseRank is Kings",
+            fhJacksTrips.Tiebreak[0] != jackpotFullHouseRankKings);
+
+        var advisedQuads = FiveCardDrawEngine.ComputeAdvisedHolds(FiveCardDrawEngine.ParseCards(["KH", "KD", "KC", "KS", "2H"]));
+        Assert(failures, "Advised holds for quads should hold the four matching cards", advisedQuads.SequenceEqual([0, 1, 2, 3]));
+
+        var advisedPair = FiveCardDrawEngine.ComputeAdvisedHolds(FiveCardDrawEngine.ParseCards(["AH", "AD", "3C", "7S", "9H"]));
+        Assert(failures, "Advised holds for a pair should hold the pair", advisedPair.SequenceEqual([0, 1]));
+
+        var advisedNothing = FiveCardDrawEngine.ComputeAdvisedHolds(FiveCardDrawEngine.ParseCards(["2H", "4D", "6C", "8S", "KH"]));
+        Assert(failures, "Advised holds for no pattern should return empty", advisedNothing.Length == 0);
+
         return Task.CompletedTask;
     }
 

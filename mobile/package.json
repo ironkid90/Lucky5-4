@@ -1,0 +1,21 @@
+{
+  "name": "lucky5-mobile",
+  "version": "0.1.0",
+  "description": "Lucky5 Video Poker – Android wrapper via Capacitor",
+  "private": true,
+  "scripts": {
+    "sync-web": "node scripts/sync-web.mjs",
+    "cap:sync": "npm run sync-web && npx cap sync android",
+    "cap:open": "npx cap open android",
+    "cap:run": "npx cap run android",
+    "build": "npm run sync-web && npx cap sync android"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor/android": "^8.2.0",
+    "@capacitor/cli": "^8.2.0",
+    "@capacitor/core": "^8.2.0"
+  }
+}

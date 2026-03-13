@@ -20,8 +20,8 @@ public sealed class AuthService(InMemoryDataStore store, ITokenService tokenServ
             throw new InvalidOperationException("OTP not verified");
         }
 
-        var access = tokenService.IssueToken(user.Id, TimeSpan.FromHours(8));
-        var refresh = tokenService.IssueToken(user.Id, TimeSpan.FromDays(30));
+        var access = tokenService.IssueToken(user.Id, TimeSpan.FromHours(8), user.Role);
+        var refresh = tokenService.IssueToken(user.Id, TimeSpan.FromDays(30), user.Role);
         var profile = store.Profiles[user.Id];
         profile.LastSeenUtc = DateTime.UtcNow;
 
@@ -42,7 +42,8 @@ public sealed class AuthService(InMemoryDataStore store, ITokenService tokenServ
             PhoneNumber = request.PhoneNumber,
             IsOtpVerified = false,
             PendingOtp = "123456",
-            PendingOtpExpiresUtc = DateTime.UtcNow.AddMinutes(10)
+            PendingOtpExpiresUtc = DateTime.UtcNow.AddMinutes(10),
+            Role = "player"
         };
 
         store.Users[user.Id] = user;
@@ -150,6 +151,13 @@ public sealed class AuthService(InMemoryDataStore store, ITokenService tokenServ
         return new WalletLedgerEntryDto(row.Id, row.Amount, row.BalanceAfter, row.Type, row.Reference, row.CreatedUtc);
     }
 
-    private static MemberProfileDto ToDto(MemberProfile profile) =>
-        new(profile.UserId, profile.Username, profile.DisplayName, profile.Email, profile.PhoneNumber, profile.WalletBalance, profile.LastSeenUtc);
+    private MemberProfileDto ToDto(MemberProfile profile)
+    {
+        var role = "player";
+        if (store.Users.TryGetValue(profile.UserId, out var user))
+        {
+            role = user.Role;
+        }
+        return new MemberProfileDto(profile.UserId, profile.Username, profile.DisplayName, profile.Email, profile.PhoneNumber, profile.WalletBalance, profile.LastSeenUtc, role);
+    }
 }

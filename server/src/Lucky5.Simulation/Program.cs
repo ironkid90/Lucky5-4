@@ -48,7 +48,7 @@ void SimulateBaseGame()
 
 void SimulateWithPayoutScale()
 {
-    Console.WriteLine("\n--- 2. WITH PAYOUT SCALE + POLICY (target 90%) ---");
+    Console.WriteLine("\n--- 2. WITH PAYOUT SCALE + POLICY (target 87.5%) ---");
     long totalIn = 0;
     long totalOut = 0;
     var handCounts = new Dictionary<string, int>();
@@ -59,7 +59,7 @@ void SimulateWithPayoutScale()
     {
         CreditsIn = 0,
         CreditsOut = 0,
-        TargetRtp = 0.90m,
+        TargetRtp = 0.875m,
         RoundCount = 0
     };
 
@@ -141,7 +141,7 @@ void SimulateFullSystemWithScale()
     {
         CreditsIn = 0,
         CreditsOut = 0,
-        TargetRtp = 0.90m,
+        TargetRtp = 0.875m,
         RoundCount = 0
     };
 
@@ -256,7 +256,7 @@ void SimulateRtpConvergence()
     {
         CreditsIn = 0,
         CreditsOut = 0,
-        TargetRtp = 0.90m,
+        TargetRtp = 0.875m,
         RoundCount = 0
     };
 
@@ -331,7 +331,7 @@ void SimulateExcitementMetrics()
     {
         CreditsIn = 0,
         CreditsOut = 0,
-        TargetRtp = 0.90m,
+        TargetRtp = 0.875m,
         RoundCount = 0
     };
 

@@ -29,7 +29,7 @@ builder.Services.AddCors(options =>
         }
         else
         {
-            var allowedOrigins = (builder.Configuration["CORS:ALLOWED_ORIGINS"] ?? "http://localhost:3000,http://localhost:5173")
+            var allowedOrigins = (builder.Configuration["CORS:ALLOWED_ORIGINS"] ?? "http://localhost:3000,http://localhost:5173,https://localhost")
                 .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             policy.WithOrigins(allowedOrigins)
                   .AllowAnyHeader()
