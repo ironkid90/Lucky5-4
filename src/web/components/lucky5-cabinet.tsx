@@ -35,17 +35,17 @@ const DEFAULT_USERNAME = "tester";
 const DEFAULT_PASSWORD = "password";
 const DEFAULT_OTP = "123456";
 
-const PAYTABLE_COLORS: Record<string, string> = {
-  RoyalFlush:    "#ffffff",
-  StraightFlush: "#ffd447",
-  FourOfAKind:   "#84ff55",
-  FullHouse:     "#9ce6ff",
-  Flush:         "#c8d8ff",
-  Straight:      "#88aaff",
-  ThreeOfAKind:  "#dddddd",
-  TwoPair:       "#cc99ff",
-  JacksOrBetter: "#a89880",
-};
+const PAYTABLE_COLORS = [
+  "#ffffff",  // Royal Flush
+  "#ffd447",  // Straight Flush
+  "#84ff55",  // Four of a Kind
+  "#9ce6ff",  // Full House
+  "#c8d8ff",  // Flush
+  "#88aaff",  // Straight
+  "#dddddd",  // Three of a Kind
+  "#cc99ff",  // Two Pair
+  "#a89880",  // Jacks or Better / others
+];
 
 type MessageTone = "ready" | "warning" | "danger";
 
@@ -413,8 +413,8 @@ export function Lucky5Cabinet() {
             <div className="paytable">
               <div className="paytable-title">Lucky5 payout glass</div>
               <div className="paytable-grid">
-                {payoutRows.map(([hand, payout]) => {
-                  const rowColor = PAYTABLE_COLORS[hand] ?? "#a89880";
+                {payoutRows.map(([hand, payout], rowIndex) => {
+                  const rowColor = PAYTABLE_COLORS[rowIndex] ?? "#a89880";
                   return (
                     <div
                       className="paytable-row"
@@ -488,7 +488,7 @@ export function Lucky5Cabinet() {
                 <strong>{openRoundId ? `Round ${openRoundId.slice(0, 8)}` : "No active round"}</strong>
               </div>
               <span className="hint">
-                {dealResult && !drawResult ? "Press HOLD buttons below to hold cards, then DRAW." : "DEAL opens a new five-card round."}
+                {dealResult && !drawResult ? "Tap HOLD under each card, then DRAW." : "DEAL opens a new five-card round."}
               </span>
             </div>
 
@@ -532,7 +532,6 @@ export function Lucky5Cabinet() {
                       key={index}
                       className={`hold-button ${holdIndexes.includes(index) ? "active" : ""}`}
                       type="button"
-                      aria-label={holdIndexes.includes(index) ? `Held card ${index + 1}` : `Hold card ${index + 1}`}
                       onClick={() => toggleHold(index)}
                       disabled={!dealResult || !!drawResult || busy}
                     >
