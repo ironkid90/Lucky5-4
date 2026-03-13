@@ -1,88 +1,47 @@
-# Lucky5 Clean-Room Rebuild
+# Lucky5
 
-This repository is the working clean-room recreation of a Lebanese amusement video poker machine lineage. The codebase combines APK-derived behavioral research, cabinet-feel reference material, and a deterministic backend engine foundation without adopting payout-steering logic from the legacy app.
+A clean-room recreation of a Lebanese amusement video poker machine (1990–2010 era).
 
-## What is already in place
-
-- Clean-room engine primitives in `server/src/Lucky5.Domain/Game/CleanRoom/`:
-  - deterministic seed flow
-  - five-card deal and draw reducer
-  - hand evaluation and payout modeling
-  - first-pass Lucky5-style double-up behavior
-  - lineage profiles for Golden Poker / Bonus Poker influence
-- Backend scaffold in `server/`:
-  - REST API (`/api/*`)
-  - SignalR hub (`/CarrePokerGameHub`)
-  - in-memory runtime services for local development
-  - domain, application, infrastructure, and realtime layers
-- Contracts in `contracts/` for REST and SignalR surface area
-- Cabinet feel, roadmap, and architecture guidance in `docs/`
-- Curated clean-room analysis, scripts, and engine prototype material in `analysis/`
-
-## Artifact Policy
-
-The Git-tracked repo is for curated source, docs, extracted reference assets, and reproducible analysis.
-
-Local-only artifacts stay ignored:
-
-- raw APK / PCAP / recording captures
-- temporary screenshots, summaries, and workspace state
-- downloaded reverse-engineering tools
-- generated reverse-engineering dumps that can be regenerated
-
-This keeps the repository pushable while preserving a richer private working set locally.
-
-## Repository Layout
-
-- `server/` ASP.NET API, domain model, realtime services, and tests
-- `contracts/` API and hub contracts
-- `docs/` architecture, roadmap, and cabinet-feel references
-- `analysis/` clean-room findings, metadata summaries, and engine prototype work
-- `client/` Flutter skeleton for later parity work
-- `infra/` local and staging-style runtime configuration
-- `resources/` and `sources/` extracted reference material already curated for the project
+ASP.NET Core 9 backend with vanilla JS/CSS frontend. Features authentic Lebanese arcade aesthetics, four progressive jackpots, Two Pair minimum hand, inline double-up Hi-Lo mechanic, and deterministic architecture targeting 87.5% RTP.
 
 ## Quick Start
 
-Run the clean-room Python engine checks:
-
-```powershell
-python -m unittest discover -s analysis\clean_room_engine -p "test_*.py" -v
+```bash
+cd server && dotnet run --project src/Lucky5.Api/Lucky5.Api.csproj --launch-profile http
 ```
 
-Run the .NET bootstrap verification:
+Opens on port 5000. Frontend is served as static files from the same server.
 
-```powershell
-dotnet run --project C:\Users\Gabi\Desktop\New folder\server\tests\Lucky5.Tests\Lucky5.Tests.csproj
+## Documentation
+
+See **[docs/README.md](docs/README.md)** for the comprehensive developer guide covering:
+
+- Architecture and three-layer engine design
+- All game rules, paytable, and mechanics
+- Credit accounting and deferred settlement model
+- Progressive jackpot system
+- Double-up Hi-Lo with 5♠ Lucky Card
+- RTP and Machine Policy
+- Full API reference
+- Configuration and deployment
+
+## Repository Structure
+
+```
+server/src/
+├── Lucky5.Api/           Web host, controllers, static frontend (wwwroot/)
+├── Lucky5.Application/   Service contracts and DTOs
+├── Lucky5.Domain/        Core engine (Game/CleanRoom/), entities
+├── Lucky5.Infrastructure/ Service implementations, in-memory store
+├── Lucky5.Realtime/      SignalR hub
+└── Lucky5.Simulation/    RTP simulation runner
 ```
 
-Run the API locally:
+## Reference Material
 
-```powershell
-dotnet run --project server/src/Lucky5.Api/Lucky5.Api.csproj
-```
-
-Optional docker stack:
-
-```powershell
-docker compose -f infra/docker-compose.yml --env-file infra/.env.local.example up -d --build
-```
-
-Default API URL: `http://localhost:5051`  
-Default hub URL: `http://localhost:5051/CarrePokerGameHub`
-
-## Active Sources Of Truth
-
-- `analysis/clean-room-kickoff.md`
-- `analysis/lucky5-foundation-summary.md`
-- `analysis/golden-poker-lineage-notes.md`
-- `docs/ARCHITECTURE.md`
-- `docs/ROADMAP.md`
-- `docs/GAME_FEEL_REFERENCE.md`
-
-## Immediate Next Work
-
-- finish the machine session and ledger layer around the deterministic engine
-- stabilize REST and SignalR contracts around the clean-room reducer
-- stand up the web-first playable cabinet slice before mobile parity work
-# Lucky5-4
+| Location | Content |
+|----------|---------|
+| `docs/GAME_FEEL_REFERENCE.md` | Visual design reference from original cabinet |
+| `docs/forensics/` | APK reverse-engineering findings |
+| `analysis/` | Clean-room engine prototype and research |
+| `contracts/` | OpenAPI and SignalR schemas |

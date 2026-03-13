@@ -9,5 +9,6 @@ public sealed class User
     public bool IsOtpVerified { get; set; }
     public string? PendingOtp { get; set; }
     public DateTime? PendingOtpExpiresUtc { get; set; }
+    public string Role { get; set; } = "player";
     public DateTime CreatedUtc { get; init; } = DateTime.UtcNow;
 }

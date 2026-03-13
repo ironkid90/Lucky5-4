@@ -79,21 +79,13 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
                 _ => DistributionMode.Neutral
             };
 
-            var jackpotContribution = request.BetAmount * 0.01m;
-            var bucket1 = decimal.Floor(jackpotContribution / 3m * 100m) / 100m;
-            var bucket2 = bucket1;
-            var bucket3 = jackpotContribution - bucket1 - bucket2;
-
             ledger.ActiveFourOfAKindSlot = (ledger.RoundCount % 2 == 0)
                 ? (int)(seed % 2)
                 : 1 - (int)(seed % 2);
-            if (ledger.ActiveFourOfAKindSlot == 0)
-                ledger.JackpotFourOfAKindA = Math.Min(ledger.JackpotFourOfAKindA + bucket1, 999_999);
-            else
-                ledger.JackpotFourOfAKindB = Math.Min(ledger.JackpotFourOfAKindB + bucket1, 999_999);
-
-            ledger.JackpotFullHouse += bucket2;
-            ledger.JackpotStraightFlush = Math.Min(ledger.JackpotStraightFlush + bucket3, 20_000_000);
+            ledger.JackpotFourOfAKindA = Math.Min(ledger.JackpotFourOfAKindA + 100, 999_999);
+            ledger.JackpotFourOfAKindB = Math.Min(ledger.JackpotFourOfAKindB + 100, 999_999);
+            ledger.JackpotFullHouse = Math.Min(ledger.JackpotFullHouse + 100, 25_000_000);
+            ledger.JackpotStraightFlush = Math.Min(ledger.JackpotStraightFlush + 100, 20_000_000);
         }
 
         var standardDeck = FiveCardDrawEngine.BuildStandardDeck();
@@ -141,7 +133,9 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
             jackpots = SnapshotJackpots(ledgerSnap);
         }
 
-        return Task.FromResult(new DealResultDto(round.RoundId, cards.Select(ToDto).ToArray(), request.BetAmount, profile.WalletBalance, jackpots));
+        var advisedHolds = FiveCardDrawEngine.ComputeAdvisedHolds(hand);
+
+        return Task.FromResult(new DealResultDto(round.RoundId, cards.Select(ToDto).ToArray(), request.BetAmount, profile.WalletBalance, jackpots, advisedHolds));
     }
 
     public Task<DrawResultDto> DrawAsync(Guid userId, DrawRequest request, CancellationToken cancellationToken)
@@ -161,10 +155,16 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
             throw new InvalidOperationException("Clean-room state not initialized");
         }
 
+        if (round.CleanRoomState.Phase != RoundPhase.Dealt)
+        {
+            throw new InvalidOperationException("Draw already completed for this round");
+        }
+
         var profile = RequireProfile(userId);
+
         if (profile.WalletBalance < round.BetAmount)
         {
-            throw new InvalidOperationException("Insufficient balance for draw");
+            throw new InvalidOperationException("Not enough credits for draw");
         }
 
         profile.WalletBalance -= round.BetAmount;
@@ -172,7 +172,13 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
         {
             var ledger = RequireMachineLedger(round.MachineId);
             ledger.CapitalIn += round.BetAmount;
+
+            ledger.JackpotFourOfAKindA = Math.Min(ledger.JackpotFourOfAKindA + 100, 999_999);
+            ledger.JackpotFourOfAKindB = Math.Min(ledger.JackpotFourOfAKindB + 100, 999_999);
+            ledger.JackpotFullHouse = Math.Min(ledger.JackpotFullHouse + 100, 25_000_000);
+            ledger.JackpotStraightFlush = Math.Min(ledger.JackpotStraightFlush + 100, 20_000_000);
         }
+
         store.Ledger.Add(new WalletLedgerEntry
         {
             UserId = userId,
@@ -254,25 +260,25 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
                 if (evaluation.Category == HandCategory.FullHouse && evaluation.Tiebreak[0] == ledger.JackpotFullHouseRank)
                 {
                     jackpotWon = ledger.JackpotFullHouse;
-                    ledger.JackpotFullHouse = 25_000_000;
+                    ledger.JackpotFullHouse = 5_000_000;
                 }
                 else if (evaluation.Category == HandCategory.FourOfAKind)
                 {
                     if (round.ActiveFourOfAKindSlotAtDeal == 0)
                     {
                         jackpotWon = ledger.JackpotFourOfAKindA;
-                        ledger.JackpotFourOfAKindA = 200_000;
+                        ledger.JackpotFourOfAKindA = 199_999;
                     }
                     else
                     {
                         jackpotWon = ledger.JackpotFourOfAKindB;
-                        ledger.JackpotFourOfAKindB = 200_000;
+                        ledger.JackpotFourOfAKindB = 199_999;
                     }
                 }
                 else if (evaluation.Category == HandCategory.StraightFlush)
                 {
                     jackpotWon = ledger.JackpotStraightFlush;
-                    ledger.JackpotStraightFlush = 5_000_000;
+                    ledger.JackpotStraightFlush = 4_000_000;
                 }
 
                 if (jackpotWon > 0)
@@ -292,19 +298,7 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
 
         var totalWin = payout + jackpotWon;
         round.WinAmount = totalWin;
-        profile.WalletBalance += totalWin;
-
-        if (totalWin > 0)
-        {
-            store.Ledger.Add(new WalletLedgerEntry
-            {
-                UserId = userId,
-                Amount = totalWin,
-                BalanceAfter = profile.WalletBalance,
-                Type = jackpotWon > 0 ? "JackpotWin" : "Win",
-                Reference = round.RoundId.ToString("N")
-            });
-        }
+        round.OriginalWinAmount = totalWin;
 
         JackpotInfoDto jackpots;
         lock (LedgerLock)
@@ -343,7 +337,7 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
         }
 
         var profile = RequireProfile(userId);
-        var machineCreditBaseline = 0;
+        var machineCreditBaseline = (int)Math.Min(profile.WalletBalance, int.MaxValue);
 
         var alteredDeck = FiveCardDrawEngine.BuildStandardDeck();
         if (round.PolicyMode == PolicyDistributionMode.Cold)
@@ -456,7 +450,6 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
         switch (resolution.Outcome)
         {
             case Lucky5DoubleUpOutcome.Win:
-                round.WinAmount = resolution.NextAmount;
                 return Task.FromResult(new DoubleUpResultDto(
                     roundId,
                     "Win",
@@ -517,9 +510,40 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
         var profile = RequireProfile(userId);
         var cashoutAmount = round.DoubleUpSession != null ? round.DoubleUpSession.CurrentAmount : (int)round.WinAmount;
 
+        if (round.IsPayoutSettled)
+        {
+            return Task.FromResult(new DoubleUpResultDto(
+                roundId,
+                "Cashout",
+                0,
+                profile.WalletBalance));
+        }
+
         if (round.DoubleUpSession != null && !round.DoubleUpSession.IsTerminal)
         {
             FinalizeDoubleUp(round, profile, cashoutAmount);
+        }
+        else if (round.DoubleUpSession == null)
+        {
+            profile.WalletBalance += cashoutAmount;
+            round.IsPayoutSettled = true;
+            var ledgerDelta = cashoutAmount - round.OriginalWinAmount;
+            if (ledgerDelta != 0)
+            {
+                lock (LedgerLock)
+                {
+                    var ledger = RequireMachineLedger(round.MachineId);
+                    ledger.CapitalOut += ledgerDelta;
+                }
+            }
+            store.Ledger.Add(new WalletLedgerEntry
+            {
+                UserId = userId,
+                Amount = cashoutAmount,
+                BalanceAfter = profile.WalletBalance,
+                Type = "Cashout",
+                Reference = round.RoundId.ToString("N")
+            });
         }
 
         return Task.FromResult(new DoubleUpResultDto(
@@ -548,11 +572,14 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
         var remaining = currentAmount - half;
 
         profile.WalletBalance += half;
-        round.WinAmount = remaining;
 
         if (round.DoubleUpSession != null)
         {
             round.DoubleUpSession = round.DoubleUpSession with { CurrentAmount = remaining };
+        }
+        else
+        {
+            round.WinAmount = remaining;
         }
 
         lock (LedgerLock)
@@ -617,15 +644,58 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
         });
     }
 
+    public Task<object> ResetMachineAsync(Guid userId, int machineId, CancellationToken cancellationToken)
+    {
+        var profile = RequireProfile(userId);
+
+        var roundsToRemove = store.ActiveRounds
+            .Where(kvp => kvp.Value.UserId == userId)
+            .Select(kvp => kvp.Key)
+            .ToList();
+        foreach (var rid in roundsToRemove)
+        {
+            store.ActiveRounds.Remove(rid);
+        }
+
+        profile.WalletBalance = 200_000;
+
+        lock (LedgerLock)
+        {
+            var ledger = RequireMachineLedger(machineId);
+            ledger.CapitalIn = 0;
+            ledger.CapitalOut = 0;
+            ledger.BaseCapitalOut = 0;
+            ledger.RoundCount = 0;
+            ledger.ConsecutiveLosses = 0;
+            ledger.RoundsSinceMediumWin = 0;
+            ledger.CooldownRoundsRemaining = 0;
+            ledger.NetSinceLastClose = 0;
+            ledger.LastCloseRoundNumber = 0;
+            ledger.RoundsSinceLucky5Hit = 0;
+            ledger.LastPayoutScale = 2.37m;
+            ledger.LastDistributionMode = DistributionMode.Neutral;
+            ledger.JackpotFullHouse = 5_000_000;
+            ledger.JackpotFullHouseRank = 14;
+            ledger.JackpotFourOfAKindA = 199_999;
+            ledger.JackpotFourOfAKindB = 199_999;
+            ledger.JackpotStraightFlush = 4_000_000;
+        }
+
+        return Task.FromResult<object>(new
+        {
+            success = true,
+            walletBalance = profile.WalletBalance,
+            message = "Machine and credits reset"
+        });
+    }
+
     private void FinalizeDoubleUp(GameRound round, MemberProfile profile, int cashoutCredits)
     {
-        var previousWin = round.WinAmount;
-        var walletDelta = cashoutCredits - previousWin;
-        profile.WalletBalance += walletDelta;
+        profile.WalletBalance += cashoutCredits;
         if (profile.WalletBalance < 0) profile.WalletBalance = 0;
-        round.WinAmount = cashoutCredits;
+        round.IsPayoutSettled = true;
 
-        var ledgerDelta = cashoutCredits - previousWin;
+        var ledgerDelta = cashoutCredits - round.OriginalWinAmount;
         if (ledgerDelta != 0)
         {
             lock (LedgerLock)
@@ -638,7 +708,7 @@ public sealed class GameService(InMemoryDataStore store, IEntropyGenerator entro
         store.Ledger.Add(new WalletLedgerEntry
         {
             UserId = round.UserId,
-            Amount = walletDelta,
+            Amount = cashoutCredits,
             BalanceAfter = profile.WalletBalance,
             Type = cashoutCredits > 0 ? "DoubleUpCashout" : "DoubleUpLoss",
             Reference = round.RoundId.ToString("N")

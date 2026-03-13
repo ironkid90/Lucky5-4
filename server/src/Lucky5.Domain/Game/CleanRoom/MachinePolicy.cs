@@ -19,7 +19,7 @@ public sealed class MachinePolicyState
     public decimal CreditsIn { get; set; }
     public decimal CreditsOut { get; set; }
     public decimal BaseCreditsOut { get; set; }
-    public decimal TargetRtp { get; set; } = 0.90m;
+    public decimal TargetRtp { get; set; } = 0.875m;
     public int RoundCount { get; set; }
 
     public int ConsecutiveLosses { get; set; }
@@ -213,23 +213,19 @@ public static class MachinePolicy
 
         if (netSinceLastClose >= SoftCapHard)
         {
-            extraFives = 3 + rng.NextInt(3);
-        }
-        else if (netSinceLastClose >= SoftCapWarning)
-        {
-            extraFives = 2 + rng.NextInt(2);
+            extraFives = 1 + rng.NextInt(2);
         }
         else if (roundsSinceLucky5Hit > 30)
         {
-            extraFives = 2 + rng.NextInt(2);
+            extraFives = rng.NextUnit() < 0.50 ? 1 : 0;
         }
         else if (roundsSinceLucky5Hit > 15)
         {
-            extraFives = 1 + rng.NextInt(2);
+            extraFives = rng.NextUnit() < 0.30 ? 1 : 0;
         }
         else
         {
-            if (rng.NextUnit() < 0.25)
+            if (rng.NextUnit() < 0.15)
             {
                 extraFives = 1;
             }
@@ -293,12 +289,13 @@ public static class MachinePolicy
 
         foreach (var card in deck)
         {
-            if (card.Rank == FiveOfSpades.Rank && card.Suit == FiveOfSpades.Suit)
+            if (card.Rank == FiveOfSpades.Rank && card.Suit == FiveOfSpades.Suit
+                && rng.NextUnit() < 0.60)
             {
                 continue;
             }
 
-            if (Array.IndexOf(HighValueRanks, card.Rank) >= 0 && rng.NextUnit() < 0.50)
+            if (Array.IndexOf(HighValueRanks, card.Rank) >= 0 && rng.NextUnit() < 0.18)
             {
                 continue;
             }
@@ -306,18 +303,9 @@ public static class MachinePolicy
             altered.Add(card);
         }
 
-        if (altered.Count < 10)
+        if (altered.Count < 30)
         {
-            altered.Clear();
-            foreach (var card in deck)
-            {
-                if (card.Rank == FiveOfSpades.Rank && card.Suit == FiveOfSpades.Suit)
-                {
-                    continue;
-                }
-
-                altered.Add(card);
-            }
+            return deck;
         }
 
         return altered.ToArray();
@@ -326,65 +314,20 @@ public static class MachinePolicy
     private static CleanRoomCard[] AlterDeckHot(CleanRoomCard[] deck, SplitMix64Rng rng, int consecutiveLosses)
     {
         var altered = new List<CleanRoomCard>(deck);
-        var intensity = consecutiveLosses >= StreakHardThreshold + 5 ? 3
-            : consecutiveLosses >= StreakHardThreshold ? 2
-            : (consecutiveLosses >= StreakSoftThreshold ? 1 : 0);
+        var intensity = consecutiveLosses >= StreakHardThreshold + 5 ? 2
+            : consecutiveLosses >= StreakHardThreshold ? 1
+            : 0;
 
-        var extraFives = 2 + rng.NextInt(3) + intensity;
-        for (var i = 0; i < extraFives; i++)
+        if (rng.NextUnit() < 0.35 + intensity * 0.15)
         {
             altered.Add(FiveOfSpades);
         }
 
-        var suitRotation = "SHDC"[rng.NextInt(4)];
-        foreach (var rank in HighValueRanks)
+        if (intensity > 0)
         {
-            var copies = 1 + rng.NextInt(2) + (intensity > 0 ? 1 : 0);
-            for (var c = 0; c < copies; c++)
-            {
-                char suit = (c == 0) ? suitRotation : "SHDC"[rng.NextInt(4)];
-                altered.Add(new CleanRoomCard(rank, suit));
-            }
-        }
-
-        var midRankPool = new[] { 10, 9, 8, 7 };
-        var midRanksToUse = rng.NextInt(2) + 2;
-        for (var m = 0; m < midRanksToUse && m < midRankPool.Length; m++)
-        {
-            var rank = midRankPool[(m + rng.NextInt(midRankPool.Length)) % midRankPool.Length];
-            if (rng.NextUnit() < 0.40 + intensity * 0.15)
-            {
-                char suit = "SHDC"[rng.NextInt(4)];
-                altered.Add(new CleanRoomCard(rank, suit));
-            }
-        }
-
-        if (intensity >= 2)
-        {
-            var suitToStack = "SHDC"[rng.NextInt(4)];
-            var flushPool = new[] { 7, 8, 9, 10, 11, 12 };
-            var flushCount = 3 + rng.NextInt(3);
-            for (var f = 0; f < flushCount && f < flushPool.Length; f++)
-            {
-                var rank = flushPool[(f + rng.NextInt(flushPool.Length)) % flushPool.Length];
-                if (rng.NextUnit() < 0.35 + (intensity >= 3 ? 0.25 : 0))
-                {
-                    altered.Add(new CleanRoomCard(rank, suitToStack));
-                }
-            }
-        }
-
-        if (intensity >= 3)
-        {
-            var pairRanks = new[] { 14, 13, 12, 11, 10 };
-            foreach (var rank in pairRanks)
-            {
-                for (int s = 0; s < 2; s++)
-                {
-                    char suit = "SHDC"[rng.NextInt(4)];
-                    altered.Add(new CleanRoomCard(rank, suit));
-                }
-            }
+            var rank = HighValueRanks[rng.NextInt(HighValueRanks.Length)];
+            char suit = "SHDC"[rng.NextInt(4)];
+            altered.Add(new CleanRoomCard(rank, suit));
         }
 
         return altered.ToArray();
