@@ -494,7 +494,9 @@ export function Lucky5Cabinet() {
 
             <div className="card-row">
               {Array.from({ length: 5 }, (_, index) => activeCards[index] ?? null).map((card, index) => (
-                <PlayingCard key={`card-${index}`} card={card} label={`Card ${index + 1}`} />
+                <div key={`card-${index}`} className="card-slot">
+                  <PlayingCard card={card} label={`Card ${index + 1}`} />
+                </div>
               ))}
             </div>
           </div>
