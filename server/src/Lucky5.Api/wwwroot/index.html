@@ -4,26 +4,155 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Lucky 5 - Video Poker</title>
-    <link rel="stylesheet" href="/css/game.css">
+    <link rel="stylesheet" href="/css/game.css?v=13">
     <link rel="icon" href="/assets/images/coin.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="game-container">
+        <div id="asset-loader">
+            <div class="loader-content">
+                <div class="loader-title">LUCKY 5</div>
+                <div class="loader-bar-track"><div class="loader-bar-fill" id="loader-fill"></div></div>
+                <div class="loader-text" id="loader-text">LOADING ASSETS...</div>
+            </div>
+        </div>
+        <div class="crt-overlay"></div>
         <div id="auth-screen">
-            <img class="logo" src="/assets/images/lucky5.png" alt="Lucky 5">
-            <div class="auth-box">
-                <h2 id="auth-title">LOGIN</h2>
-                <div id="auth-error" class="auth-error"></div>
-                <form id="auth-form" onsubmit="return false;">
-                    <input type="text" id="auth-username" placeholder="Username" autocomplete="off">
-                    <input type="password" id="auth-password" placeholder="Password">
-                    <button type="button" id="auth-submit" class="auth-btn">LOGIN</button>
-                </form>
-                <div id="auth-toggle" class="auth-toggle">No account? <span>Sign Up</span></div>
+            <div class="auth-ambient"></div>
+            <div class="cabinet-ghost">
+                <div class="cab-g-marquee"></div>
+                <div class="cab-g-screen">
+                    <div class="cab-g-paytable">
+                        <div class="cab-g-row" style="color:#f44"><span>ROYAL FLUSH</span><span>5,000,000</span></div>
+                        <div class="cab-g-row" style="color:#f80"><span>STRAIGHT FLUSH</span><span>375,000</span><span style="color:#ff0;font-size:5px"> +JP</span></div>
+                        <div class="cab-g-row" style="color:#0c0"><span>4 OF A KIND</span><span>75,000</span></div>
+                        <div class="cab-g-row" style="color:#ff0"><span>FULL HOUSE</span><span>60,000</span></div>
+                        <div class="cab-g-row" style="color:#08f"><span>FLUSH</span><span>50,000</span></div>
+                        <div class="cab-g-row" style="color:#0cc"><span>STRAIGHT</span><span>40,000</span></div>
+                        <div class="cab-g-row" style="color:#0c0"><span>3 OF A KIND</span><span>15,000</span></div>
+                        <div class="cab-g-row" style="color:#0cc"><span>2 PAIR</span><span>10,000</span></div>
+                    </div>
+                    <div class="cab-g-cards">
+                        <div class="cab-g-card">♠</div>
+                        <div class="cab-g-card cab-g-red">♥</div>
+                        <div class="cab-g-card">♣</div>
+                        <div class="cab-g-card cab-g-red">♦</div>
+                        <div class="cab-g-card">♠</div>
+                    </div>
+                    <div class="cab-g-credits">
+                        <span style="color:#0f0">CREDIT 121,200</span>
+                        <span style="color:#ff0">STAKE 5,000</span>
+                    </div>
+                </div>
+                <div class="cab-g-panel">
+                    <div class="cab-g-holds">
+                        <div class="cab-g-hbtn"></div><div class="cab-g-hbtn"></div><div class="cab-g-hbtn"></div><div class="cab-g-hbtn"></div><div class="cab-g-hbtn"></div>
+                    </div>
+                    <div class="cab-g-actions">
+                        <div class="cab-g-abtn cab-g-red-btn"></div>
+                        <div class="cab-g-abtn cab-g-red-btn"></div>
+                        <div class="cab-g-abtn cab-g-gold-btn"></div>
+                        <div class="cab-g-abtn cab-g-gold-btn"></div>
+                        <div class="cab-g-abtn cab-g-green-btn"></div>
+                    </div>
+                    <div class="cab-g-bottom">
+                        <div class="cab-g-bbtn cab-g-red-btn"></div>
+                        <div class="cab-g-bbtn cab-g-menu-btn"></div>
+                        <div class="cab-g-bbtn cab-g-red-btn"></div>
+                    </div>
+                </div>
+                <div class="cab-g-base"><div class="cab-g-slot"></div></div>
+            </div>
+            <div class="auth-content">
+                <img class="logo" src="/assets/images/lucky5.png" alt="Lucky 5">
+                <div class="auth-box">
+                    <div class="auth-box-inset"></div>
+                    <h2 id="auth-title">LOGIN</h2>
+                    <div id="auth-error" class="auth-error"></div>
+                    <form id="auth-form" onsubmit="return false;">
+                        <input type="text" id="auth-username" placeholder="USERNAME" autocomplete="off">
+                        <input type="password" id="auth-password" placeholder="PASSWORD">
+                        <button type="button" id="auth-submit" class="auth-btn">LOGIN</button>
+                    </form>
+                    <div id="auth-toggle" class="auth-toggle"><span class="auth-toggle-label">NO ACCOUNT?</span> <span>SIGN UP</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="lobby-screen">
+            <div class="lobby-top-bar">
+                <div class="lobby-balance-box">
+                    <span class="lobby-balance-label">CREDIT</span>
+                    <span class="lobby-balance-value" id="lobby-balance">0</span>
+                </div>
+                <div class="lobby-user-box">
+                    <span class="lobby-username" id="lobby-username">PLAYER</span>
+                    <button class="lobby-btn lobby-btn-sm" id="lobby-logout-btn">LOGOUT</button>
+                </div>
+            </div>
+
+            <div class="lobby-body">
+                <div class="lobby-section">
+                    <div class="lobby-section-title">SELECT GAME</div>
+                    <div class="lobby-game-grid" id="lobby-game-grid"></div>
+                </div>
+
+                <div class="lobby-section">
+                    <div class="lobby-section-title">WALLET</div>
+                    <div class="lobby-wallet-summary">
+                        <div class="lobby-wallet-bal">
+                            <span class="lobby-wallet-bal-label">BALANCE</span>
+                            <span class="lobby-wallet-bal-value" id="lobby-wallet-bal">0</span>
+                        </div>
+                        <div class="lobby-wallet-actions">
+                            <button class="lobby-btn" id="lobby-wallet-btn">VIEW WALLET</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lobby-nav-bar">
+                <button class="lobby-nav-item active" id="nav-lobby" data-target="lobby">
+                    <span class="lobby-nav-icon">&#9776;</span>
+                    <span class="lobby-nav-label">LOBBY</span>
+                </button>
+                <button class="lobby-nav-item" id="nav-wallet" data-target="wallet">
+                    <span class="lobby-nav-icon">&#9733;</span>
+                    <span class="lobby-nav-label">WALLET</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="wallet-screen">
+            <div class="wallet-header">
+                <button class="lobby-btn lobby-btn-sm" id="wallet-back-btn">&lt; LOBBY</button>
+                <div class="wallet-title">WALLET</div>
+                <div class="wallet-spacer"></div>
+            </div>
+            <div class="wallet-body">
+                <div class="wallet-balance-card">
+                    <span class="wallet-balance-label">CURRENT BALANCE</span>
+                    <span class="wallet-balance-amount" id="wallet-balance">0</span>
+                </div>
+                <div class="wallet-deposit-withdraw">
+                    <button class="lobby-btn wallet-action-btn" id="wallet-deposit-btn" disabled>DEPOSIT</button>
+                    <button class="lobby-btn wallet-action-btn" id="wallet-withdraw-btn" disabled>WITHDRAW</button>
+                </div>
+                <div class="wallet-coming-soon">DEPOSIT / WITHDRAW COMING SOON</div>
+                <div class="wallet-history-title">RECENT TRANSACTIONS</div>
+                <div class="wallet-history-list" id="wallet-history-list">
+                    <div class="wallet-history-empty">NO TRANSACTIONS YET</div>
+                </div>
             </div>
         </div>
 
         <div id="game-screen">
+            <div id="game-back-bar">
+                <button class="lobby-btn lobby-btn-sm" id="game-back-lobby">&lt; LOBBY</button>
+            </div>
             <div id="paytable">
                 <div class="pay-row rf" data-hand="RoyalFlush">
                     <span class="hand-name">ROYAL FLUSH</span>
@@ -59,6 +188,8 @@
                 </div>
             </div>
 
+            <div id="lucky5-banner">LUCKY 5 IS ACTIVE</div>
+
             <div id="credit-stake-bar">
                 <div id="credits" class="credit-val">CREDIT<br><span>0</span></div>
                 <div id="win-indicator"></div>
@@ -67,30 +198,34 @@
 
             <div id="card-area"></div>
 
-            <div id="jackpot-bar">
-                <div class="jackpot-slot jp-4k" data-jp="fourOfAKindA">
-                    <span class="jp-label">4K</span>
-                    <span class="jp-value" id="jp-4k-a-val">0</span>
+            <!-- Large win amount display (clone-style golden outlined number) -->
+            <div id="win-amount-display">
+                <span id="win-slot-tag"></span>
+                <span id="win-amount-value"></span>
+            </div>
+
+            <!-- Machine info & jackpot block (clone-style SERIE/KENT/S/N + counters) -->
+            <div id="machine-info-block">
+                <div id="machine-identity">
+                    <span class="mi-line"><span class="mi-label">SERIE</span> <span class="mi-sep">-</span> <span id="mi-serie" class="mi-val">1</span></span>
+                    <span class="mi-line"><span class="mi-label">KENT</span> <span class="mi-sep">/3 :</span> <span id="mi-kent" class="mi-val">1</span></span>
                 </div>
-                <div class="jackpot-slot jp-fh" data-jp="fullHouse">
-                    <span class="jp-label">FH</span>
-                    <span class="jp-rank" id="jp-fh-rank">A</span>
-                    <span class="jp-value" id="jp-fh-val">0</span>
+                <div id="jackpot-counters">
+                    <span class="jp-counter" id="jp-counter-a"><span class="jp-prefix">×</span> <span class="jp-cval">0</span></span>
+                    <span class="jp-counter" id="jp-counter-center"><span class="jp-cval">0</span></span>
+                    <span class="jp-counter" id="jp-counter-b"><span class="jp-cval">0</span></span>
                 </div>
-                <div class="jackpot-slot jp-4k" data-jp="fourOfAKindB">
-                    <span class="jp-label">4K</span>
-                    <span class="jp-value" id="jp-4k-b-val">0</span>
+                <div id="machine-serial">
+                    <span class="mi-label">S/N:</span> <span id="mi-serial" class="mi-val">0</span>
                 </div>
-                <div class="jackpot-slot jp-sf" data-jp="straightFlush">
-                    <span class="jp-label">SF</span>
-                    <span class="jp-value" id="jp-sf-val">0</span>
-                </div>
+                <div id="bonus-hand-text"></div>
             </div>
 
             <div id="du-info-panel">
                 <div id="du-info-left">
                     <div id="du-label">HI LO GAMBLE</div>
-                    <div id="du-ace-info">ACE ALWAYS WINS</div>
+                    <div id="du-ace-info">ACE COUNTS HI OR LO</div>
+                    <div id="du-lucky-info">5 ♠ NEVER LOSE WHEN BUYING</div>
                 </div>
             </div>
 
@@ -106,28 +241,39 @@
 
             <div id="controls">
                 <div id="hold-row">
-                    <button class="cab-btn cab-hold" data-index="0" disabled>HOLD</button>
-                    <button class="cab-btn cab-hold" data-index="1" disabled>HOLD</button>
-                    <button class="cab-btn cab-hold" data-index="2" disabled>HOLD</button>
-                    <button class="cab-btn cab-hold" data-index="3" disabled>HOLD</button>
-                    <button class="cab-btn cab-hold" data-index="4" disabled>HOLD</button>
+                    <button class="cab-btn cab-hold" data-index="0" disabled></button>
+                    <button class="cab-btn cab-hold" data-index="1" disabled></button>
+                    <button class="cab-btn cab-hold" data-index="2" disabled></button>
+                    <button class="cab-btn cab-hold" data-index="3" disabled></button>
+                    <button class="cab-btn cab-hold" data-index="4" disabled></button>
                 </div>
                 <div id="action-row">
-                    <button class="cab-btn cab-big" id="btn-big" disabled>BIG</button>
-                    <button class="cab-btn cab-small" id="btn-small" disabled>SMALL</button>
-                    <button class="cab-btn cab-cancel" id="btn-cancel" disabled>CANCEL<br>HOLD</button>
-                    <button class="cab-btn cab-deal" id="btn-deal" disabled>DEAL<br>DRAW</button>
-                    <button class="cab-btn cab-bet" id="btn-bet">BET</button>
+                    <button class="cab-btn cab-big" id="btn-big" disabled></button>
+                    <button class="cab-btn cab-small" id="btn-small" disabled></button>
+                    <button class="cab-btn cab-cancel" id="btn-cancel" disabled></button>
+                    <button class="cab-btn cab-deal" id="btn-deal" disabled></button>
+                    <button class="cab-btn cab-bet" id="btn-bet"></button>
                 </div>
                 <div id="bottom-row">
-                    <button class="cab-btn cab-takehalf" id="btn-take-half" disabled>TAKE<br>HALF</button>
-                    <button class="cab-btn cab-menu" id="btn-menu">&#9776;</button>
-                    <button class="cab-btn cab-takescore" id="btn-take-score" disabled>TAKE<br>SCORE</button>
+                    <button class="cab-btn cab-takehalf" id="btn-take-half" disabled></button>
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+                        <button class="cab-btn cab-menu" id="btn-menu">&#9776;</button>
+                        <span style="font-family:'Press Start 2P',monospace;font-size:6px;color:#aaa;letter-spacing:1px;">MENU</span>
+                    </div>
+                    <button class="cab-btn cab-takescore" id="btn-take-score" disabled></button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="/js/game.js"></script>
+    <div id="menu-panel" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9999;justify-content:center;align-items:center;flex-direction:column;gap:12px;font-family:'Press Start 2P',monospace;">
+        <div style="color:#ff0;font-size:11px;margin-bottom:10px;letter-spacing:2px;">MENU</div>
+        <button id="btn-reset-machine" style="background:linear-gradient(180deg,#c00,#800);color:#fff;border:2px solid #f44;padding:10px 28px;font-family:'Press Start 2P',monospace;font-size:9px;cursor:pointer;letter-spacing:1px;">RESET MACHINE</button>
+        <button id="btn-logout-menu" style="background:linear-gradient(180deg,#444,#222);color:#fff;border:2px solid #888;padding:10px 28px;font-family:'Press Start 2P',monospace;font-size:9px;cursor:pointer;letter-spacing:1px;">LOGOUT</button>
+        <button id="btn-close-menu" style="background:none;color:#888;border:1px solid #555;padding:6px 20px;font-family:'Press Start 2P',monospace;font-size:8px;cursor:pointer;margin-top:8px;">CLOSE</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script src="/js/game.js?v=13"></script>
 </body>
 </html>

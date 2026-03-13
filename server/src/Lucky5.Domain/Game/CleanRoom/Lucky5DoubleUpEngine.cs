@@ -44,7 +44,7 @@ public static class Lucky5DoubleUpEngine
             CurrentRoundIndex: 0,
             SwitchCountInRound: 0,
             LuckyHitCount: 0,
-            IsNoLoseActive: false,
+            IsNoLoseActive: deckArray[0].Rank == 5 && deckArray[0].Suit == 'S',
             Options: resolvedOptions);
 
         return EnforceMachineLimit(session, Lucky5DoubleUpOutcome.MachineClosed);
