@@ -250,6 +250,9 @@ input {
   letter-spacing: 0.04em;
 }
 
+.status-grid .status-chip.ledger:nth-child(2) strong {
+  color: var(--amber-hot);
+}
 .machine-title {
   font-size: 0.68rem;
   color: #fff1c1;
