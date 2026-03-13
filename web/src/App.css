@@ -339,3 +339,119 @@
 .arcade-btn.circular {
   border-radius: 50%;
 }
+
+/* ── Double-Up Trail ── */
+
+@keyframes pulse-glow-card {
+  0%, 100% { box-shadow: 0 0 8px rgba(255,215,0,0.4), 2px 2px 4px rgba(0,0,0,0.5); }
+  50% { box-shadow: 0 0 16px rgba(255,215,0,0.7), 0 0 24px rgba(255,215,0,0.3), 2px 2px 4px rgba(0,0,0,0.5); }
+}
+
+.du-header {
+  text-align: center;
+  padding: 4px 0 2px;
+  flex-shrink: 0;
+}
+
+.du-title {
+  font-size: 14px;
+  color: #FFD700;
+  text-shadow: 0 0 8px #FFD700, 0 0 16px #FFD700;
+}
+
+.du-ace-note {
+  font-size: 8px;
+  color: #FF3333;
+  text-shadow: 0 0 4px #FF3333;
+  margin-top: 2px;
+}
+
+.du-amount-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 8px 0;
+}
+
+.du-trail-section {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 0;
+  padding: 4px 0;
+}
+
+.du-trail-cards {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.du-trail-slot {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.du-trail-arrow {
+  color: #FFD700;
+  font-size: 16px;
+  text-shadow: 0 0 4px #FFD700;
+  margin: 0 1px;
+}
+
+.du-active-dealer .card-traditional,
+.du-active-dealer.card-traditional {
+  outline: 3px solid #FFD700;
+  outline-offset: 1px;
+  box-shadow: 0 0 10px rgba(255,215,0,0.6), 2px 2px 4px rgba(0,0,0,0.5), inset 0 0 4px rgba(255,255,255,0.3);
+}
+
+.du-card-win .card-traditional {
+  outline: 3px solid #00FF00;
+  outline-offset: 1px;
+  box-shadow: 0 0 10px rgba(0,255,0,0.5), 2px 2px 4px rgba(0,0,0,0.5), inset 0 0 4px rgba(255,255,255,0.3);
+}
+
+.du-card-lose .card-traditional {
+  outline: 3px solid #FF3333;
+  outline-offset: 1px;
+  opacity: 0.7;
+  box-shadow: 0 0 10px rgba(255,50,50,0.5), 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.du-next-card {
+  animation: pulse-glow-card 1.2s ease-in-out infinite;
+}
+
+.du-page-arrow {
+  background: none;
+  border: 2px solid #FFD700;
+  color: #FFD700;
+  font-size: 18px;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  text-shadow: 0 0 4px #FFD700;
+}
+
+.du-page-arrow:hover {
+  background: rgba(255,215,0,0.15);
+}
+
+.du-page-indicator {
+  text-align: center;
+  font-size: 8px;
+  color: #888;
+  text-shadow: 0 0 4px #444;
+  padding: 2px 0;
+  flex-shrink: 0;
+}

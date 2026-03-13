@@ -24,6 +24,23 @@ const PHASES = {
   HOLD: 'HOLD',
   DRAW: 'DRAW',
   PAYOUT: 'PAYOUT',
+  DOUBLE_UP: 'DOUBLE_UP',
+}
+
+const CARDS_PER_PAGE = 5
+
+function rankValue(card) {
+  return RANKS.indexOf(card.rank) + 2 // 2..14, Ace=14
+}
+
+function resolveDoubleUp(dealerCard, challengerCard, guess) {
+  const dv = rankValue(dealerCard)
+  const cv = rankValue(challengerCard)
+  // Ace always wins for the player
+  if (cv === 14) return 'win'
+  if (dv === 14) return 'lose'
+  if (guess === 'BIG') return cv > dv ? 'win' : 'lose'
+  return cv < dv ? 'win' : 'lose'
 }
 
 function createDeck() {
@@ -210,7 +227,28 @@ function App() {
   const [highlightRow, setHighlightRow] = useState(null)
   const [message, setMessage] = useState('INSERT COIN — PRESS BET TO SET STAKE')
 
+  // Double-up state
+  const [duTrail, setDuTrail] = useState([])         // array of {card, role:'dealer'|'challenger', guess?, won?}
+  const [duDealer, setDuDealer] = useState(null)      // current dealer card
+  const [duAmount, setDuAmount] = useState(0)          // amount at risk
+  const [duDeck, setDuDeck] = useState([])             // shuffled deck for DU rounds
+  const [duCursor, setDuCursor] = useState(0)          // index into duDeck
+  const [duPage, setDuPage] = useState(0)              // pagination page
+  const [duLastResult, setDuLastResult] = useState(null) // 'win' | 'lose' | null
+  const [duRevealed, setDuRevealed] = useState(false)  // whether challenger is face-up
+
   const stake = STAKES[stakeIndex]
+
+  const resetDoubleUp = useCallback(() => {
+    setDuTrail([])
+    setDuDealer(null)
+    setDuAmount(0)
+    setDuDeck([])
+    setDuCursor(0)
+    setDuPage(0)
+    setDuLastResult(null)
+    setDuRevealed(false)
+  }, [])
 
   const resetToIdle = useCallback(() => {
     setPhase(PHASES.IDLE)
@@ -220,7 +258,8 @@ function App() {
     setWinAmount(0)
     setHighlightRow(null)
     setMessage('INSERT COIN — PRESS BET TO SET STAKE')
-  }, [])
+    resetDoubleUp()
+  }, [resetDoubleUp])
 
   const handleBet = useCallback(() => {
     if (phase !== PHASES.IDLE) return
@@ -229,6 +268,11 @@ function App() {
 
   const handleDeal = useCallback(() => {
     if (phase === PHASES.PAYOUT) {
+      resetToIdle()
+      return
+    }
+
+    if (phase === PHASES.DOUBLE_UP && duLastResult === 'lose') {
       resetToIdle()
       return
     }
@@ -281,7 +325,7 @@ function App() {
       setPhase(PHASES.PAYOUT)
       return
     }
-  }, [phase, credit, stake, cards, held, deck, deckCursor, resetToIdle])
+  }, [phase, credit, stake, cards, held, deck, deckCursor, resetToIdle, duLastResult])
 
   const handleHold = useCallback((index) => {
     if (phase !== PHASES.HOLD) return
@@ -298,18 +342,108 @@ function App() {
   }, [phase])
 
   const handleTakeScore = useCallback(() => {
+    if (phase === PHASES.DOUBLE_UP && duLastResult === 'win') {
+      // Already credited on win, just exit
+      resetToIdle()
+      return
+    }
     if (phase !== PHASES.PAYOUT || !result) return
     resetToIdle()
-  }, [phase, result, resetToIdle])
+  }, [phase, result, resetToIdle, duLastResult])
 
   const handleTakeHalf = useCallback(() => {
+    if (phase === PHASES.DOUBLE_UP && duLastResult === 'win') {
+      const halfToReturn = Math.floor(duAmount / 2)
+      setCredit(c => c - halfToReturn)
+      setMessage(`TOOK HALF — ${duAmount - halfToReturn} CREDITS KEPT`)
+      resetToIdle()
+      return
+    }
     if (phase !== PHASES.PAYOUT || !result) return
     const halfToReturn = Math.floor(winAmount / 2)
     setCredit(c => c - halfToReturn)
     const kept = winAmount - halfToReturn
     setMessage(`TOOK HALF — ${kept} CREDITS KEPT`)
     resetToIdle()
-  }, [phase, result, winAmount, resetToIdle])
+  }, [phase, result, winAmount, resetToIdle, duLastResult, duAmount])
+
+  // ── Double-up logic ──
+
+  const startDoubleUp = useCallback((amount) => {
+    const freshDeck = shuffleDeck(createDeck())
+    const dealer = freshDeck[0]
+    setDuDeck(freshDeck)
+    setDuCursor(1)
+    setDuDealer(dealer)
+    setDuAmount(amount)
+    setDuTrail([{ card: dealer, role: 'dealer' }])
+    setDuLastResult(null)
+    setDuRevealed(false)
+    setDuPage(0)
+    setPhase(PHASES.DOUBLE_UP)
+    setMessage('HI LO GAMBLE — ACE ALWAYS WINS')
+  }, [])
+
+  const handleDoubleUpGuess = useCallback((guess) => {
+    if (phase !== PHASES.DOUBLE_UP || duRevealed) return
+    const challenger = duDeck[duCursor]
+    const outcome = resolveDoubleUp(duDealer, challenger, guess)
+    const newTrail = [...duTrail, { card: challenger, role: 'challenger', guess, won: outcome === 'win' }]
+    setDuTrail(newTrail)
+    setDuCursor(c => c + 1)
+    setDuRevealed(true)
+    setDuLastResult(outcome)
+
+    // Auto-scroll to last page
+    const totalCards = newTrail.length + 1 // +1 for the "next" placeholder
+    const maxPage = Math.max(0, Math.ceil(totalCards / CARDS_PER_PAGE) - 1)
+    setDuPage(maxPage)
+
+    if (outcome === 'win') {
+      const newAmount = duAmount * 2
+      setDuAmount(newAmount)
+      setCredit(c => c + duAmount) // net gain = duAmount (double minus original)
+      setMessage(`★ WIN ★ ${newAmount} CREDITS — AGAIN / TAKE SCORE`)
+    } else {
+      setCredit(c => c - duAmount)
+      setMessage(`LOSE — ${duAmount} CREDITS LOST`)
+    }
+  }, [phase, duRevealed, duDeck, duCursor, duDealer, duTrail, duAmount])
+
+  const handleDoubleUpContinue = useCallback(() => {
+    if (phase !== PHASES.DOUBLE_UP || duLastResult !== 'win') return
+    // The last winning challenger becomes the new dealer
+    const lastChallenger = duTrail[duTrail.length - 1].card
+    setDuDealer(lastChallenger)
+    const newTrail = [...duTrail, { card: lastChallenger, role: 'dealer' }]
+    setDuTrail(newTrail)
+    setDuRevealed(false)
+    setDuLastResult(null)
+
+    // If deck is running low, reshuffle
+    if (duCursor >= duDeck.length - 2) {
+      const freshDeck = shuffleDeck(createDeck())
+      setDuDeck(freshDeck)
+      setDuCursor(0)
+    }
+
+    // Auto-scroll to last page
+    const totalCards = newTrail.length + 1
+    const maxPage = Math.max(0, Math.ceil(totalCards / CARDS_PER_PAGE) - 1)
+    setDuPage(maxPage)
+
+    setMessage('HI LO GAMBLE — ACE ALWAYS WINS')
+  }, [phase, duLastResult, duTrail, duCursor, duDeck])
+
+  const handleDuPagePrev = useCallback(() => {
+    setDuPage(p => Math.max(0, p - 1))
+  }, [])
+
+  const handleDuPageNext = useCallback(() => {
+    const totalCards = duTrail.length + 1
+    const maxPage = Math.max(0, Math.ceil(totalCards / CARDS_PER_PAGE) - 1)
+    setDuPage(p => Math.min(maxPage, p + 1))
+  }, [duTrail])
 
   const dealLabel = phase === PHASES.HOLD ? 'DRAW' : 'DEAL'
 
@@ -319,34 +453,123 @@ function App() {
       <div className="crt-screen crt-area">
         <div className="crt-content">
 
-          <div className="paytable-section">
-            <div className="paytable-hands">
-              {PAYTABLE.map((row, i) => (
-                <div
-                  key={row.name}
-                  className={`paytable-row ${highlightRow === i ? 'highlighted' : ''}`}
-                >
-                  <span
-                    className="paytable-label led-text"
-                    style={{
-                      color: highlightRow === i ? '#FFFF00' : row.color,
-                      textShadow: highlightRow === i ? '0 0 8px #FFFF00' : `0 0 4px ${row.color}60`,
-                    }}
-                  >
-                    {row.label}
-                  </span>
-                  <span
-                    className="paytable-value led-text"
-                    style={{
-                      color: highlightRow === i ? '#FFFF00' : '#CCCCCC',
-                      textShadow: highlightRow === i ? '0 0 8px #FFFF00' : 'none',
-                    }}
-                  >
-                    {row.mult * stake}
-                  </span>
+          {phase === PHASES.DOUBLE_UP ? (
+            /* ── DOUBLE-UP MODE ── */
+            <>
+              <div className="du-header">
+                <div className="du-title led-text">HI LO GAMBLE</div>
+                <div className="du-ace-note led-text">ACE ALWAYS WINS</div>
+                <div className="du-amount-row">
+                  <span className="led-text" style={{ color: '#3399FF', fontSize: '10px' }}>CREDIT {credit}</span>
+                  <span className="led-text" style={{ color: '#FFD700', fontSize: '12px' }}>GAMBLE {duAmount}</span>
                 </div>
-              ))}
-            </div>
+              </div>
+
+              <div className="du-trail-section">
+                {duPage > 0 && (
+                  <button className="du-page-arrow" onClick={handleDuPagePrev}>◀</button>
+                )}
+
+                <div className="du-trail-cards">
+                  {(() => {
+                    // Build display items: trail cards + a "next" placeholder
+                    const items = duTrail.map((entry, i) => ({ ...entry, idx: i }))
+                    if (duLastResult !== 'lose') {
+                      items.push({ role: 'next', idx: items.length })
+                    }
+                    const start = duPage * CARDS_PER_PAGE
+                    const visible = items.slice(start, start + CARDS_PER_PAGE)
+
+                    return visible.map((entry, vi) => (
+                      <div key={entry.idx} className="du-trail-slot">
+                        {vi > 0 && <span className="du-trail-arrow">→</span>}
+                        {entry.role === 'next' ? (
+                          <div className="card-back du-next-card">
+                            <div className="flex items-center justify-center h-full">
+                              <div className="text-yellow-300 text-2xl font-bold led-text">?</div>
+                            </div>
+                          </div>
+                        ) : entry.role === 'dealer' && entry.idx === duTrail.length - 1 && !duRevealed ? (
+                          /* Active dealer card */
+                          <CardFace card={entry.card} phase={PHASES.PAYOUT} className="du-active-dealer" />
+                        ) : (
+                          <div className={
+                            entry.role === 'dealer' && entry.idx === duTrail.length - 1 ? 'du-active-dealer' :
+                            entry.role === 'challenger' && entry.won === true ? 'du-card-win' :
+                            entry.role === 'challenger' && entry.won === false ? 'du-card-lose' : ''
+                          }>
+                            <CardFace card={entry.card} phase={PHASES.PAYOUT} />
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  })()}
+                </div>
+
+                {(() => {
+                  const totalItems = duTrail.length + (duLastResult !== 'lose' ? 1 : 0)
+                  const maxPage = Math.max(0, Math.ceil(totalItems / CARDS_PER_PAGE) - 1)
+                  return duPage < maxPage ? (
+                    <button className="du-page-arrow" onClick={handleDuPageNext}>▶</button>
+                  ) : <div style={{ width: 28 }} />
+                })()}
+              </div>
+
+              {(() => {
+                const totalItems = duTrail.length + (duLastResult !== 'lose' ? 1 : 0)
+                const maxPage = Math.max(0, Math.ceil(totalItems / CARDS_PER_PAGE) - 1)
+                return maxPage > 0 ? (
+                  <div className="du-page-indicator led-text">PAGE {duPage + 1} / {maxPage + 1}</div>
+                ) : null
+              })()}
+
+              <div className="info-section">
+                <div
+                  className={`result-message led-text ${duLastResult === 'win' ? 'result-flash' : ''}`}
+                  style={{
+                    color: duLastResult === 'win' ? '#00FF00' : duLastResult === 'lose' ? '#FF3333' : '#FFD700',
+                    textShadow: duLastResult === 'win'
+                      ? '0 0 10px #00FF00, 0 0 20px #00FF00'
+                      : duLastResult === 'lose'
+                        ? '0 0 10px #FF3333'
+                        : '0 0 6px #FFD700',
+                  }}
+                >
+                  {message}
+                </div>
+              </div>
+            </>
+          ) : (
+            /* ── NORMAL PLAY MODE ── */
+            <>
+              <div className="paytable-section">
+                <div className="paytable-hands">
+                  {PAYTABLE.map((row, i) => (
+                    <div
+                      key={row.name}
+                      className={`paytable-row ${highlightRow === i ? 'highlighted' : ''}`}
+                    >
+                      <span
+                        className="paytable-label led-text"
+                        style={{
+                          color: highlightRow === i ? '#FFFF00' : row.color,
+                          textShadow: highlightRow === i ? '0 0 8px #FFFF00' : `0 0 4px ${row.color}60`,
+                        }}
+                      >
+                        {row.label}
+                      </span>
+                      <span
+                        className="paytable-value led-text"
+                        style={{
+                          color: highlightRow === i ? '#FFFF00' : '#CCCCCC',
+                          textShadow: highlightRow === i ? '0 0 8px #FFFF00' : 'none',
+                        }}
+                      >
+                        {row.mult * stake}
+                      </span>
+                    </div>
+                  ))}
+                </div>
 
             <div className="credit-stake-panel">
               <div className="credit-display">
@@ -377,7 +600,6 @@ function App() {
                   held={held[i]}
                   phase={phase}
                   onClick={() => handleHold(i)}
-                  doubleUpLabel={phase === PHASES.PAYOUT ? (i === 1 ? 'SMALL' : i === 3 ? 'BIG' : null) : null}
                 />
               ))}
             </div>
@@ -412,6 +634,8 @@ function App() {
               )}
             </div>
           </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -433,29 +657,38 @@ function App() {
           <ArcadeButton
             label="BIG"
             color="yellow"
-            onClick={() => {}}
-            disabled={phase !== PHASES.PAYOUT}
+            onClick={() => {
+              if (phase === PHASES.DOUBLE_UP) handleDoubleUpGuess('BIG')
+              else if (phase === PHASES.PAYOUT && result) startDoubleUp(winAmount)
+            }}
+            disabled={!(phase === PHASES.PAYOUT && result) && !(phase === PHASES.DOUBLE_UP && !duRevealed)}
             className="action-btn"
           />
           <ArcadeButton
             label="SMALL"
             color="yellow"
-            onClick={() => {}}
-            disabled={phase !== PHASES.PAYOUT}
+            onClick={() => {
+              if (phase === PHASES.DOUBLE_UP) handleDoubleUpGuess('SMALL')
+              else if (phase === PHASES.PAYOUT && result) startDoubleUp(winAmount)
+            }}
+            disabled={!(phase === PHASES.PAYOUT && result) && !(phase === PHASES.DOUBLE_UP && !duRevealed)}
             className="action-btn"
           />
           <ArcadeButton
-            label={<>CANCEL<br/>HOLD</>}
+            label={phase === PHASES.DOUBLE_UP && duLastResult === 'win' ? <>↓ AGAIN</> : <>CANCEL<br/>HOLD</>}
             color="yellow"
-            onClick={handleCancelHold}
-            disabled={phase !== PHASES.HOLD}
+            onClick={phase === PHASES.DOUBLE_UP && duLastResult === 'win' ? handleDoubleUpContinue : handleCancelHold}
+            disabled={
+              !(phase === PHASES.HOLD) &&
+              !(phase === PHASES.DOUBLE_UP && duLastResult === 'win')
+            }
             className="action-btn action-btn-text-sm"
           />
           <ArcadeButton
             label={<>DEAL<br/>DRAW</>}
             color="red"
             onClick={handleDeal}
-            disabled={false}
+            disabled={phase === PHASES.DOUBLE_UP && duLastResult !== 'lose'}
             className="action-btn action-btn-text-sm"
           />
           <ArcadeButton
@@ -472,7 +705,10 @@ function App() {
             label={<>TAKE<br/>HALF</>}
             color="red"
             onClick={handleTakeHalf}
-            disabled={phase !== PHASES.PAYOUT || !result}
+            disabled={
+              !((phase === PHASES.PAYOUT && result) ||
+                (phase === PHASES.DOUBLE_UP && duLastResult === 'win'))
+            }
             className="bottom-btn action-btn-text-sm"
           />
           <ArcadeButton
@@ -487,7 +723,10 @@ function App() {
             label={<>TAKE<br/>SCORE</>}
             color="red"
             onClick={handleTakeScore}
-            disabled={phase !== PHASES.PAYOUT || !result}
+            disabled={
+              !((phase === PHASES.PAYOUT && result) ||
+                (phase === PHASES.DOUBLE_UP && duLastResult === 'win'))
+            }
             className="bottom-btn action-btn-text-sm"
           />
         </div>
