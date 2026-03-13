@@ -3,7 +3,7 @@ namespace Lucky5.Domain.Entities;
 public sealed class MachineLedgerState
 {
     public int MachineId { get; init; }
-    public decimal TargetRtp { get; set; } = 0.90m;
+    public decimal TargetRtp { get; set; } = 0.875m;
     public decimal CapitalIn { get; set; }
     public decimal CapitalOut { get; set; }
     public int RoundCount { get; set; }
@@ -12,12 +12,12 @@ public sealed class MachineLedgerState
     public DistributionMode LastDistributionMode { get; set; } = DistributionMode.Neutral;
     public DateTime LastRoundUtc { get; set; } = DateTime.UtcNow;
 
-    public decimal JackpotFullHouse { get; set; } = 25_000_000;
+    public decimal JackpotFullHouse { get; set; } = 5_000_000;
     public int JackpotFullHouseRank { get; set; } = 14;
-    public decimal JackpotFourOfAKindA { get; set; } = 200_000;
-    public decimal JackpotFourOfAKindB { get; set; } = 200_000;
+    public decimal JackpotFourOfAKindA { get; set; } = 199_999;
+    public decimal JackpotFourOfAKindB { get; set; } = 199_999;
     public int ActiveFourOfAKindSlot { get; set; }
-    public decimal JackpotStraightFlush { get; set; } = 5_000_000;
+    public decimal JackpotStraightFlush { get; set; } = 4_000_000;
 
     public decimal BaseCapitalOut { get; set; }
     public decimal LastPayoutScale { get; set; } = 2.37m;

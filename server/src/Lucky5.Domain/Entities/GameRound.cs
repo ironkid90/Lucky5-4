@@ -12,6 +12,8 @@ public sealed class GameRound
     public List<PokerCard> FinalCards { get; set; } = new();
     public string HandRank { get; set; } = "NoWin";
     public decimal WinAmount { get; set; }
+    public decimal OriginalWinAmount { get; set; }
+    public bool IsPayoutSettled { get; set; }
     public bool IsCompleted { get; set; }
     public bool EnteredDoubleUp { get; set; }
     public PokerCard? DoubleUpCard { get; set; }

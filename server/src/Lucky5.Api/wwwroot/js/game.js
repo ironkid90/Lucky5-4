@@ -1,5 +1,7 @@
 const API = '';
-let token = null;
+let token = sessionStorage.getItem('lucky5_token') || null;
+let currentUsername = sessionStorage.getItem('lucky5_username') || '';
+let currentRole = sessionStorage.getItem('lucky5_role') || 'player';
 let balance = 0;
 let currentBet = 5000;
 let machineId = 1;
@@ -14,6 +16,7 @@ let pressSound = null;
 let duSwitchesRemaining = 0;
 let duIsNoLoseActive = false;
 let duSessionStarted = false;
+let duDealerCard = null;
 let jackpots = null;
 let shuffleInterval = null;
 let takeScoreAnimating = false;
@@ -21,6 +24,11 @@ let handsPlayed = 0;
 let currentHandRank = null;
 let jackpotRank = 14;
 let active4kSlot = 0;
+let machineSerial = 0;
+let machineSerie = 1;
+let machineKent = 1;
+let hubConnection = null;
+let machineJoined = false;
 
 const MACHINE_CREDIT_LIMIT = 50000000;
 
@@ -55,6 +63,60 @@ const ALL_CARD_CODES = [];
         }
     }
 })();
+
+const preloadedImages = {};
+
+function preloadAllAssets() {
+    return new Promise((resolve) => {
+        const allPaths = [];
+
+        ALL_CARD_CODES.forEach(code => {
+            allPaths.push(`/assets/images/cards/${code}.png`);
+        });
+        allPaths.push(CARD_BACK_SRC);
+
+        const buttonFiles = [
+            'bet.png', 'bet_on.png', 'big.png', 'big_on.png',
+            'small.png', 'small_on.png', 'deal_draw.png', 'deal_draw_on.png',
+            'cancel_hold.png', 'cancel_hold_on.png', 'hold_off.png', 'hold_on.png',
+            'take_half.png', 'take_half_on.png', 'take_score.png', 'take_score_on.png'
+        ];
+        buttonFiles.forEach(f => allPaths.push(`/assets/images/buttons/${f}`));
+
+        allPaths.push('/assets/images/board.png');
+        allPaths.push('/assets/images/lucky5.png');
+        allPaths.push('/assets/images/coin.png');
+        allPaths.push('/assets/images/splash.png');
+
+        const total = allPaths.length;
+        let loaded = 0;
+        const fillEl = document.getElementById('loader-fill');
+        const textEl = document.getElementById('loader-text');
+
+        function onDone() {
+            loaded++;
+            const pct = Math.round((loaded / total) * 100);
+            if (fillEl) fillEl.style.width = pct + '%';
+            if (textEl) textEl.textContent = `LOADING ${loaded}/${total}`;
+            if (loaded >= total) {
+                const loader = document.getElementById('asset-loader');
+                if (loader) {
+                    loader.classList.add('done');
+                    setTimeout(() => { loader.style.display = 'none'; }, 500);
+                }
+                resolve();
+            }
+        }
+
+        allPaths.forEach(src => {
+            const img = new Image();
+            img.onload = onDone;
+            img.onerror = onDone;
+            img.src = src;
+            preloadedImages[src] = img;
+        });
+    });
+}
 
 function randomCardSrc() {
     const code = ALL_CARD_CODES[Math.floor(Math.random() * ALL_CARD_CODES.length)];
@@ -148,18 +210,37 @@ function updateJackpotDisplay(jp) {
     }
     if (!jackpots) return;
 
-    const el4kA = $('#jp-4k-a-val');
-    const el4kB = $('#jp-4k-b-val');
-    const elFh = $('#jp-fh-val');
-    const elSf = $('#jp-sf-val');
-    const elRank = $('#jp-fh-rank');
+    // New machine-info-block jackpot counters
+    const jpA = document.querySelector('#jp-counter-a .jp-cval');
+    const jpCenter = document.querySelector('#jp-counter-center .jp-cval');
+    const jpB = document.querySelector('#jp-counter-b .jp-cval');
+    if (jpA) jpA.textContent = formatNum(jackpots.fourOfAKindA || 0);
+    if (jpCenter) jpCenter.textContent = formatNum(jackpots.fullHouse || 0);
+    if (jpB) jpB.textContent = formatNum(jackpots.straightFlush || 0);
+
+    // Machine serial (sum of jackpots as stand-in)
+    const serialEl = document.getElementById('mi-serial');
+    if (serialEl) {
+        machineSerial = (jackpots.fourOfAKindA || 0) + (jackpots.fourOfAKindB || 0);
+        serialEl.textContent = formatNum(machineSerial);
+    }
+
+    // Update Full House rank display (jackpot-selected highlight on paytable)
+    const rankEl = document.getElementById('jp-fh-rank');
+    if (rankEl) rankEl.textContent = RANK_NAMES[jackpotRank] || 'A';
+    updateJackpotSelectedRow();
+    updateActive4kHighlight();
+    updateBonusHandText();
+
+    // Legacy jackpot bar (if elements exist)
+    const el4kA = document.getElementById('jp-4k-a-val');
+    const el4kB = document.getElementById('jp-4k-b-val');
+    const elFh = document.getElementById('jp-fh-val');
+    const elSf = document.getElementById('jp-sf-val');
     if (el4kA) el4kA.textContent = formatNum(jackpots.fourOfAKindA || 0);
     if (el4kB) el4kB.textContent = formatNum(jackpots.fourOfAKindB || 0);
     if (elFh) elFh.textContent = formatNum(jackpots.fullHouse || 0);
     if (elSf) elSf.textContent = formatNum(jackpots.straightFlush || 0);
-    if (elRank) elRank.textContent = RANK_NAMES[jackpotRank] || 'A';
-
-    updateActive4kHighlight();
 }
 
 function updateActive4kHighlight() {
@@ -173,18 +254,53 @@ function updateActive4kHighlight() {
     });
 }
 
-function updateBonusBar(handRank, jackpotWon) {
-    const el = $('#bonus-text');
-    if (jackpotWon > 0) {
-        el.textContent = `JACKPOT WON! +${formatNum(jackpotWon)}`;
-    } else if (handRank && JACKPOT_HANDS.includes(handRank)) {
-        if (handRank === 'FullHouse') {
-            el.textContent = `FH ${RANK_NAMES[jackpotRank]} JACKPOT`;
-        } else {
-            el.textContent = `${HAND_DISPLAY[handRank]} JACKPOT`;
-        }
+function updateJackpotSelectedRow() {
+    // Show solid box around the active jackpot hand in paytable (like clone's FULL HOUSE highlight)
+    document.querySelectorAll('.pay-row').forEach(row => row.classList.remove('jackpot-selected'));
+    const fhRow = document.querySelector('.pay-row.fh');
+    if (fhRow) fhRow.classList.add('jackpot-selected');
+}
+
+function updateBonusHandText() {
+    const el = document.getElementById('bonus-hand-text');
+    if (!el) return;
+    if (active4kSlot === 0 || active4kSlot === 1) {
+        el.textContent = '4  OF  A  KIND    WINS  BONUS';
     } else {
         el.textContent = '';
+    }
+}
+
+function updateWinAmountDisplay(amount, slotTag) {
+    const valEl = document.getElementById('win-amount-value');
+    const tagEl = document.getElementById('win-slot-tag');
+    const container = document.getElementById('win-amount-display');
+    if (!valEl || !container) return;
+    if (amount > 0) {
+        valEl.textContent = formatNum(amount);
+        if (tagEl) tagEl.textContent = slotTag || '';
+        container.classList.add('visible');
+    } else {
+        valEl.textContent = '';
+        if (tagEl) tagEl.textContent = '';
+        container.classList.remove('visible');
+    }
+}
+
+function updateBonusBar(handRank, jackpotWon) {
+    const el = document.getElementById('bonus-text');
+    const handTextEl = document.getElementById('bonus-hand-text');
+    if (jackpotWon > 0) {
+        if (el) el.textContent = `JACKPOT WON! +${formatNum(jackpotWon)}`;
+        if (handTextEl) handTextEl.textContent = `JACKPOT WON! +${formatNum(jackpotWon)}`;
+    } else if (handRank && JACKPOT_HANDS.includes(handRank)) {
+        const msg = handRank === 'FullHouse'
+            ? `FH ${RANK_NAMES[jackpotRank]} JACKPOT`
+            : `${HAND_DISPLAY[handRank]} JACKPOT`;
+        if (el) el.textContent = msg;
+    } else {
+        if (el) el.textContent = '';
+        updateBonusHandText();
     }
 }
 
@@ -193,46 +309,56 @@ function cardImagePath(card) {
     return `/assets/images/cards/${card.code}.png`;
 }
 
+function showIdleTitle() {
+    const area = $('#card-area');
+    area.innerHTML = '';
+    area.classList.remove('du-mode');
+    const title = document.createElement('div');
+    title.className = 'idle-title';
+    title.innerHTML = '<span class="idle-lucky">LUCKY</span><span class="idle-poker">POKER</span>';
+    area.appendChild(title);
+}
+
+function hideIdleTitle() {
+    const area = $('#card-area');
+    const title = area.querySelector('.idle-title');
+    if (title) title.remove();
+}
+
 function renderCards(cardData, animate) {
     const area = $('#card-area');
     area.innerHTML = '';
     area.classList.remove('du-mode');
     for (let i = 0; i < 5; i++) {
         const slot = document.createElement('div');
-        slot.className = 'card-slot' + (animate ? ' dealing' : '');
+        slot.className = 'card-slot';
         if (holdIndexes.has(i)) slot.classList.add('held');
-        slot.style.animationDelay = animate ? `${i * 0.1}s` : '0s';
+
+        if (animate) {
+            slot.classList.add('deal-in');
+        }
 
         const badge = document.createElement('div');
         badge.className = 'hold-badge';
         badge.textContent = 'HOLD';
 
-        const inner = document.createElement('div');
-        inner.className = 'card-inner';
+        const cardImg = document.createElement('div');
+        cardImg.className = 'card-face';
+        cardImg.innerHTML = `<img src="${cardImagePath(cardData[i])}" alt="card">`;
 
-        const back = document.createElement('div');
-        back.className = 'card-back';
-        back.innerHTML = `<img src="${cardImagePath(cardData[i])}" alt="card">`;
-
-        const front = document.createElement('div');
-        front.className = 'card-front';
-        front.innerHTML = `<img src="${CARD_BACK_SRC}" alt="back">`;
-
-        inner.appendChild(front);
-        inner.appendChild(back);
+        slot.appendChild(cardImg);
         slot.appendChild(badge);
-        slot.appendChild(inner);
 
         slot.addEventListener('click', () => toggleHold(i));
         area.appendChild(slot);
 
         if (animate) {
             setTimeout(() => {
-                inner.classList.add('flipped');
-                slot.classList.remove('dealing');
-            }, 80 + i * 100);
+                slot.classList.remove('deal-in');
+                slot.classList.add('deal-in-done');
+            }, 100 + i * 180);
         } else {
-            inner.classList.add('flipped');
+            slot.classList.add('deal-in-done');
         }
     }
 }
@@ -339,12 +465,33 @@ async function doSwitchDealer() {
         duSwitchesRemaining = result.switchesRemaining;
         duIsNoLoseActive = result.isNoLoseActive;
         winAmount = result.currentAmount;
+        duDealerCard = result.dealerCard;
 
-        renderDoubleUpCards(result.dealerCard, false, null);
-        showMessage(`SWITCHED - WIN: ${formatNum(result.currentAmount)} (${duSwitchesRemaining} left)`, 'win');
+        const isLucky5 = result.status === 'Lucky5';
+        if (isLucky5) {
+            triggerLucky5Flash();
+        }
+
+        renderDoubleUpCards(duDealerCard, true, null);
+        if (isLucky5) {
+            showMessage(`5\u2660 LUCKY 5 ACTIVE! WIN: ${formatNum(result.currentAmount)}`, 'win');
+        } else {
+            showMessage(`SWITCHED - WIN: ${formatNum(result.currentAmount)} (${duSwitchesRemaining} left)`, 'win');
+        }
         setButtonStates();
     } catch (e) {
         showMessage(e.message, 'lose');
+    }
+}
+
+function triggerLucky5Flash() {
+    const banner = document.getElementById('lucky5-banner');
+    if (banner) banner.classList.add('active');
+    const flash = document.getElementById('lucky5-flash');
+    if (flash) {
+        flash.classList.remove('active');
+        void flash.offsetWidth;
+        flash.classList.add('active');
     }
 }
 
@@ -472,8 +619,27 @@ function applyAutoHold(cardList) {
     });
 }
 
+function applyServerAdvisedHolds(advisedArray) {
+    if (!advisedArray || advisedArray.length === 0) return;
+
+    holdIndexes = new Set(advisedArray);
+    const slots = $$('.card-slot');
+    const holdBtns = $$('.cab-hold');
+    advisedArray.forEach(i => {
+        if (slots[i]) slots[i].classList.add('held');
+        if (holdBtns[i]) holdBtns[i].classList.add('active');
+    });
+}
+
 async function doDeal() {
     if (gameState === 'idle') {
+        if (!machineJoined) {
+            await joinMachine(machineId);
+            if (!machineJoined) {
+                showMessage('MACHINE NOT READY - TRY AGAIN', 'lose');
+                return;
+            }
+        }
         if (balance < currentBet) {
             showMessage('NOT ENOUGH CREDITS', 'lose');
             return;
@@ -485,6 +651,7 @@ async function doDeal() {
         updateBonusBar(null);
         updateWinIndicator(0);
         hideDuInfo();
+        hideIdleTitle();
 
         try {
             const result = await apiCall('POST', '/api/Game/cards/deal', {
@@ -496,13 +663,20 @@ async function doDeal() {
             balance = result.walletBalanceAfterBet;
             if (result.jackpots) updateJackpotDisplay(result.jackpots);
             updateCredits();
+            updateWinAmountDisplay(0);
             holdIndexes.clear();
             renderCards(cards, true);
             $$('.cab-hold').forEach(btn => btn.classList.remove('active'));
             gameState = 'hold';
 
+            const serverHolds = result.advisedHolds;
+
             setTimeout(() => {
-                applyAutoHold(cards);
+                if (serverHolds && serverHolds.length > 0) {
+                    applyServerAdvisedHolds(serverHolds);
+                } else {
+                    applyAutoHold(cards);
+                }
                 setButtonStates();
                 if (holdIndexes.size > 0) {
                     showMessage('AUTO-HOLD SUGGESTED - DRAW OR ADJUST');
@@ -514,6 +688,7 @@ async function doDeal() {
             showMessage(e.message, 'lose');
             gameState = 'idle';
             setButtonStates();
+            showIdleTitle();
         }
     } else if (gameState === 'hold') {
         if (balance < currentBet) {
@@ -531,22 +706,25 @@ async function doDeal() {
                 holdIndexes: Array.from(holdIndexes)
             });
             cards = result.cards;
-            balance = result.walletBalanceAfterRound;
             winAmount = result.winAmount;
+            balance = result.walletBalanceAfterRound;
             if (result.jackpots) updateJackpotDisplay(result.jackpots);
             updateCredits();
 
             renderCards(cards, false);
             setTimeout(() => {
+                let dropDelay = 0;
                 $$('.card-slot').forEach((slot, i) => {
                     if (!holdIndexes.has(i)) {
-                        const inner = slot.querySelector('.card-inner');
-                        inner.classList.remove('flipped');
+                        slot.classList.remove('deal-in-done');
+                        slot.classList.add('deal-in');
                         setTimeout(() => {
-                            const backImg = slot.querySelector('.card-back img');
-                            backImg.src = cardImagePath(cards[i]);
-                            inner.classList.add('flipped');
-                        }, 150);
+                            const face = slot.querySelector('.card-face img');
+                            if (face) face.src = cardImagePath(cards[i]);
+                            slot.classList.remove('deal-in');
+                            slot.classList.add('deal-in-done');
+                        }, 100 + dropDelay);
+                        dropDelay += 180;
                     }
                 });
             }, 60);
@@ -568,6 +746,7 @@ async function doDeal() {
                     flashWinCards();
                     updateBonusBar(handName, result.jackpotWon);
                     updateWinIndicator(winAmount);
+                    updateWinAmountDisplay(winAmount, active4kSlot === 0 ? 'A' : 'B');
                     gameState = 'win';
                     setButtonStates();
 
@@ -581,6 +760,10 @@ async function doDeal() {
                     gameState = 'idle';
                     setButtonStates();
                     updatePaytable();
+                    updateWinAmountDisplay(0);
+                    setTimeout(() => {
+                        if (gameState === 'idle') showIdleTitle();
+                    }, 2000);
                 }
             }, 500);
         } catch (e) {
@@ -607,7 +790,7 @@ function hideDuInfo() {
     $('#du-info-panel').classList.remove('visible');
 }
 
-function renderDoubleUpCards(dealerCard, challengerRevealed, challengerCard) {
+function renderDoubleUpCards(dealerCard, showShuffle, challengerCard) {
     const area = $('#card-area');
     area.innerHTML = '';
     area.classList.add('du-mode');
@@ -616,50 +799,90 @@ function renderDoubleUpCards(dealerCard, challengerRevealed, challengerCard) {
 
     const dealerSlot = document.createElement('div');
     dealerSlot.className = 'du-card-slot';
-    dealerSlot.innerHTML = `
-        <div class="du-card-label">DEALER</div>
-        <div class="du-card-frame dealer-card" id="du-dealer-frame">
-            <img src="${cardImagePath(dealerCard)}" alt="dealer">
-        </div>
-    `;
+    const dealerLabel = document.createElement('div');
+    dealerLabel.className = 'du-card-label';
+    dealerLabel.textContent = 'DEALER';
+    const dealerFrame = document.createElement('div');
+    dealerFrame.className = 'du-card-frame dealer-card';
+    const isLucky = dealerCard && dealerCard.code === '5S';
+    if (isLucky) dealerFrame.classList.add('lucky5-glow');
+    dealerFrame.innerHTML = `<img src="${cardImagePath(dealerCard)}" alt="dealer">`;
+    dealerSlot.appendChild(dealerLabel);
+    dealerSlot.appendChild(dealerFrame);
     area.appendChild(dealerSlot);
 
     const spacer = document.createElement('div');
-    spacer.style.width = '20px';
+    spacer.className = 'du-spacer';
     area.appendChild(spacer);
 
-    const challSlot = document.createElement('div');
-    challSlot.className = 'du-card-slot';
-    challSlot.id = 'du-shuffle-slot';
-    const challLabel = document.createElement('div');
-    challLabel.className = 'du-card-label';
-    challLabel.textContent = challengerRevealed ? '' : 'BIG / SMALL ?';
-    const challFrame = document.createElement('div');
-    challFrame.className = 'du-card-frame';
-    challFrame.id = 'du-shuffle-frame';
-    if (challengerRevealed && challengerCard) {
+    if (challengerCard) {
+        const challSlot = document.createElement('div');
+        challSlot.className = 'du-card-slot slide-in-done';
+        const challLabel = document.createElement('div');
+        challLabel.className = 'du-card-label';
+        challLabel.textContent = '';
+        const challFrame = document.createElement('div');
+        challFrame.className = 'du-card-frame';
+        const challLucky = challengerCard.code === '5S';
+        if (challLucky) challFrame.classList.add('lucky5-glow');
         challFrame.innerHTML = `<img src="${cardImagePath(challengerCard)}" alt="result">`;
-    } else {
+        challSlot.appendChild(challLabel);
+        challSlot.appendChild(challFrame);
+        area.appendChild(challSlot);
+    } else if (showShuffle) {
+        const challSlot = document.createElement('div');
+        challSlot.className = 'du-card-slot';
+        challSlot.id = 'du-shuffle-slot';
+        const challLabel = document.createElement('div');
+        challLabel.className = 'du-card-label';
+        challLabel.textContent = 'BIG / SMALL ?';
+        const challFrame = document.createElement('div');
+        challFrame.className = 'du-card-frame';
+        challFrame.id = 'du-shuffle-frame';
         challFrame.innerHTML = `<img src="${CARD_BACK_SRC}" alt="card">`;
-    }
-    challSlot.appendChild(challLabel);
-    challSlot.appendChild(challFrame);
-    area.appendChild(challSlot);
-
-    if (!challengerRevealed) {
+        challSlot.appendChild(challLabel);
+        challSlot.appendChild(challFrame);
+        area.appendChild(challSlot);
         startShuffle();
     }
 }
 
+let shuffleRAF = null;
+let shuffleLastTime = 0;
+
 function startShuffle() {
     stopShuffle();
-    shuffleInterval = setInterval(() => {
-        const f = document.querySelector('#du-shuffle-frame img');
-        if (f) f.src = randomCardSrc();
-    }, 80);
+    shuffleLastTime = 0;
+    const frame = document.getElementById('du-shuffle-frame');
+    if (frame) frame.classList.add('du-flip-in');
+
+    function tick(ts) {
+        if (ts - shuffleLastTime >= 120) {
+            shuffleLastTime = ts;
+            const f = document.querySelector('#du-shuffle-frame img');
+            if (f) {
+                const frame = document.getElementById('du-shuffle-frame');
+                if (frame) {
+                    frame.classList.remove('du-flip-in');
+                    frame.classList.add('du-flip-out');
+                    setTimeout(() => {
+                        f.src = randomCardSrc();
+                        frame.classList.remove('du-flip-out');
+                        frame.classList.add('du-flip-in');
+                    }, 60);
+                }
+            }
+        }
+        shuffleRAF = requestAnimationFrame(tick);
+    }
+    shuffleRAF = requestAnimationFrame(tick);
 }
 
 function stopShuffle() {
+    if (shuffleRAF) {
+        cancelAnimationFrame(shuffleRAF);
+        shuffleRAF = null;
+    }
     if (shuffleInterval) {
         clearInterval(shuffleInterval);
         shuffleInterval = null;
@@ -674,13 +897,20 @@ async function startDoubleUpFlow() {
         duSessionStarted = true;
         duSwitchesRemaining = result.switchesRemaining;
         duIsNoLoseActive = result.isNoLoseActive;
+        duDealerCard = result.dealerCard;
         gameState = 'doubleup';
 
         showDuInfo();
-        showMessage(`DOUBLE UP - WIN: ${formatNum(result.currentAmount)}`, 'win');
+        if (result.isNoLoseActive) {
+            triggerLucky5Flash();
+            showMessage(`5\u2660 LUCKY 5 ACTIVE! DOUBLE UP: ${formatNum(result.currentAmount)}`, 'win');
+        } else {
+            showMessage(`DOUBLE UP - WIN: ${formatNum(result.currentAmount)}`, 'win');
+        }
+        updateWinAmountDisplay(result.currentAmount, active4kSlot === 0 ? 'A' : 'B');
         updateWinIndicator(result.currentAmount);
         if (currentHandRank) highlightPaytableDU(currentHandRank, result.currentAmount);
-        renderDoubleUpCards(result.dealerCard, false, null);
+        renderDoubleUpCards(duDealerCard, true, null);
         setButtonStates();
     } catch (e) {
         showMessage(e.message, 'lose');
@@ -700,50 +930,71 @@ async function doDoubleUp(guess) {
         const result = await apiCall('POST', '/api/Game/double-up/guess', { roundId, guess });
 
         setTimeout(() => {
-            const challImg = document.querySelector('#du-shuffle-frame img');
-
-            if (result.challengerCard && challImg) {
-                challImg.src = cardImagePath(result.challengerCard);
-            }
+            renderDoubleUpCards(duDealerCard, false, result.challengerCard);
 
             if (result.status === 'Win') {
                 winAmount = result.currentAmount;
-                balance = result.walletBalance;
                 updateCredits();
                 updateWinIndicator(winAmount);
+                updateWinAmountDisplay(winAmount, active4kSlot === 0 ? 'A' : 'B');
                 if (currentHandRank) highlightPaytableDU(currentHandRank, winAmount);
                 showMessage(`WIN! ${formatNum(winAmount)} - DOUBLE AGAIN?`, 'win');
                 gameState = 'doubleup';
 
                 setTimeout(() => {
                     if (gameState === 'doubleup') {
-                        renderDoubleUpCards(result.dealerCard, false, null);
+                        duDealerCard = result.dealerCard;
+                        renderDoubleUpCards(duDealerCard, true, null);
                         duSwitchesRemaining = result.switchesRemaining;
                         duIsNoLoseActive = false;
                         setButtonStates();
                     }
                 }, 900);
             } else if (result.status === 'SafeFail') {
+                triggerLucky5Flash();
                 winAmount = result.currentAmount;
                 balance = result.walletBalance;
                 updateCredits();
                 updateWinIndicator(winAmount);
-                showMessage(`SAFE! ${formatNum(winAmount)} BANKED`, 'win');
+                updateWinAmountDisplay(winAmount, active4kSlot === 0 ? 'A' : 'B');
+                showMessage(`SAFE! 5\u2660 SAVED ${formatNum(winAmount)}`, 'win');
                 gameState = 'win';
                 setTimeout(() => exitDoubleUp(), 1200);
             } else if (result.status === 'MachineClosed') {
-                winAmount = result.currentAmount;
-                balance = result.walletBalance;
+                const closedAmount = result.currentAmount;
+                balance = result.walletBalance - closedAmount;
                 updateCredits();
-                updateWinIndicator(winAmount);
+                updateWinIndicator(closedAmount);
+                updateWinAmountDisplay(closedAmount, active4kSlot === 0 ? 'A' : 'B');
                 showMessage('MACHINE CLOSED - MAX CREDITS!', 'win');
-                gameState = 'win';
-                setTimeout(() => exitDoubleUp(), 1200);
+                stopShuffle();
+                hideDuInfo();
+                duSessionStarted = false;
+                const bannerMC = document.getElementById('lucky5-banner');
+                if (bannerMC) bannerMC.classList.remove('active');
+                const flashMC = document.getElementById('lucky5-flash');
+                if (flashMC) flashMC.classList.remove('active');
+                setTimeout(async () => {
+                    await animateDrainToCredits(closedAmount, balance);
+                    winAmount = 0;
+                    balance = result.walletBalance;
+                    updateCredits();
+                    updateWinIndicator(0);
+                    updateWinAmountDisplay(0);
+                    gameState = 'idle';
+                    updatePaytable();
+                    updateBonusBar(null);
+                    currentHandRank = null;
+                    showIdleTitle();
+                    setButtonStates();
+                    showMessage('PLACE YOUR BET');
+                }, 1200);
             } else {
                 winAmount = 0;
                 balance = result.walletBalance;
                 updateCredits();
                 updateWinIndicator(0);
+                updateWinAmountDisplay(0);
                 showMessage('YOU LOSE!', 'lose');
                 setTimeout(() => exitDoubleUp(), 1000);
             }
@@ -760,13 +1011,17 @@ function exitDoubleUp() {
     hideDuInfo();
     duSessionStarted = false;
     duIsNoLoseActive = false;
+    duDealerCard = null;
     $('#lucky5-flash').classList.remove('active');
+    const banner = document.getElementById('lucky5-banner');
+    if (banner) banner.classList.remove('active');
+    updateWinAmountDisplay(0);
 
     if (winAmount > 0) {
         gameState = 'win';
         setButtonStates();
         showMessage(`WIN: ${formatNum(winAmount)} - TAKE OR DOUBLE`, 'win');
-        renderCards([null, null, null, null, null], false);
+        showIdleTitle();
     } else {
         currentHandRank = null;
         gameState = 'idle';
@@ -775,47 +1030,64 @@ function exitDoubleUp() {
         updateBonusBar(null);
         updateWinIndicator(0);
         showMessage('PLACE YOUR BET');
-        renderCards([null, null, null, null, null], false);
+        showIdleTitle();
     }
 }
 
-async function animateDrainToCredits(amount, startBalance) {
-    takeScoreAnimating = true;
-    setButtonStates();
+function animateDrainToCredits(amount, startBalance) {
+    return new Promise((resolve) => {
+        takeScoreAnimating = true;
+        setButtonStates();
 
-    let remaining = amount;
-    const totalDuration = Math.min(2500, Math.max(500, amount / 2000000 * 2500));
-    const steps = 20;
-    const stepDelay = totalDuration / steps;
-    const perStep = Math.ceil(amount / steps);
-    const creditsEl = $('#credits');
-    const winEl = $('#win-indicator');
-    let credited = 0;
+        const totalDuration = Math.min(5000, Math.max(1500, amount / 500000 * 4000));
+        const creditsEl = $('#credits');
+        const creditsSpan = $('#credits span');
+        const winEl = $('#win-indicator');
+        const msgEl = $('#game-message');
+        let startTime = null;
 
-    for (let i = 0; i < steps && credited < amount; i++) {
-        const chunk = Math.min(perStep, amount - credited);
-        credited += chunk;
-        remaining = amount - credited;
+        let lastTickToggle = 0;
 
-        balance = startBalance + credited;
-        $('#credits span').textContent = formatNum(balance);
-        creditsEl.classList.add('credit-ticking');
+        function frame(ts) {
+            if (!startTime) startTime = ts;
+            const elapsed = ts - startTime;
+            const progress = Math.min(elapsed / totalDuration, 1);
+            const credited = Math.floor(amount * progress);
+            const remaining = amount - credited;
 
-        if (remaining > 0) {
-            winEl.textContent = `WIN ${formatNum(remaining)}`;
-        } else {
-            winEl.textContent = '';
+            balance = startBalance + credited;
+            creditsSpan.textContent = formatNum(balance);
+
+            if (ts - lastTickToggle > 120) {
+                lastTickToggle = ts;
+                creditsEl.classList.toggle('credit-ticking');
+            }
+
+            if (remaining > 0) {
+                winEl.textContent = `WIN ${formatNum(remaining)}`;
+            } else {
+                winEl.textContent = '';
+            }
+
+            if (msgEl) {
+                msgEl.textContent = `COLLECTING... ${formatNum(credited)} / ${formatNum(amount)}`;
+                msgEl.className = 'win';
+            }
+
+            if (progress < 1) {
+                requestAnimationFrame(frame);
+            } else {
+                balance = startBalance + amount;
+                updateCredits();
+                winEl.textContent = '';
+                creditsEl.classList.remove('credit-ticking');
+                takeScoreAnimating = false;
+                resolve();
+            }
         }
 
-        showMessage(`COLLECTING... ${formatNum(credited)} / ${formatNum(amount)}`, 'win');
-        await new Promise(r => setTimeout(r, stepDelay));
-        creditsEl.classList.remove('credit-ticking');
-    }
-
-    balance = startBalance + amount;
-    updateCredits();
-    winEl.textContent = '';
-    takeScoreAnimating = false;
+        requestAnimationFrame(frame);
+    });
 }
 
 async function mainTakeScore() {
@@ -824,6 +1096,10 @@ async function mainTakeScore() {
     stopShuffle();
     hideDuInfo();
     duSessionStarted = false;
+    const bannerEl = document.getElementById('lucky5-banner');
+    if (bannerEl) bannerEl.classList.remove('active');
+    const flashEl = document.getElementById('lucky5-flash');
+    if (flashEl) flashEl.classList.remove('active');
 
     const amount = winAmount;
     winAmount = 0;
@@ -831,17 +1107,16 @@ async function mainTakeScore() {
     gameState = 'idle';
     updatePaytable();
     updateBonusBar(null);
+    updateWinAmountDisplay(0);
     currentHandRank = null;
-    renderCards([null, null, null, null, null], false);
+    showIdleTitle();
 
     try {
         const result = await apiCall('POST', '/api/Game/double-up/cashout', { roundId });
-        const serverBalance = result.walletBalance;
         const cashoutAmount = result.currentAmount;
-        const startBal = serverBalance - cashoutAmount;
 
-        await animateDrainToCredits(cashoutAmount, startBal);
-        balance = serverBalance;
+        await animateDrainToCredits(cashoutAmount, balance);
+        balance = result.walletBalance;
         updateCredits();
     } catch (e) {
         balance += amount;
@@ -860,10 +1135,6 @@ async function mainTakeHalf() {
 
     try {
         const result = await apiCall('POST', '/api/Game/double-up/take-half', { roundId });
-        const half = Math.floor(winAmount / 2);
-
-        const startBal = result.walletBalance - half;
-        await animateDrainToCredits(half, startBal);
 
         balance = result.walletBalance;
         updateCredits();
@@ -874,13 +1145,18 @@ async function mainTakeHalf() {
             stopShuffle();
             hideDuInfo();
             duSessionStarted = false;
+            const b = document.getElementById('lucky5-banner');
+            if (b) b.classList.remove('active');
+            const f = document.getElementById('lucky5-flash');
+            if (f) f.classList.remove('active');
             currentHandRank = null;
             gameState = 'idle';
             setButtonStates();
             updatePaytable();
             updateBonusBar(null);
+            updateWinAmountDisplay(0);
             showMessage('PLACE YOUR BET');
-            renderCards([null, null, null, null, null], false);
+            showIdleTitle();
         } else {
             showMessage(`${formatNum(winAmount)} REMAINS - DOUBLE UP!`, 'win');
             if (currentHandRank) highlightPaytableDU(currentHandRank, winAmount);
@@ -945,6 +1221,108 @@ async function doVerifyOtp(username) {
     });
 }
 
+function storeToken(t) {
+    token = t;
+    sessionStorage.setItem('lucky5_token', t);
+}
+
+function storeUserInfo(username, role) {
+    currentUsername = username;
+    currentRole = role || 'player';
+    sessionStorage.setItem('lucky5_username', currentUsername);
+    sessionStorage.setItem('lucky5_role', currentRole);
+}
+
+function clearToken() {
+    token = null;
+    currentUsername = '';
+    currentRole = 'player';
+    sessionStorage.removeItem('lucky5_token');
+    sessionStorage.removeItem('lucky5_username');
+    sessionStorage.removeItem('lucky5_role');
+}
+
+async function setupSignalR() {
+    if (!token) return;
+    if (hubConnection) {
+        try { await hubConnection.stop(); } catch (_) {}
+    }
+    hubConnection = new signalR.HubConnectionBuilder()
+        .withUrl(`${API}/CarrePokerGameHub`, { accessTokenFactory: () => token })
+        .withAutomaticReconnect()
+        .build();
+
+    hubConnection.on('MachineStateUpdated', (state) => {
+        if (state && state.jackpots) {
+            updateJackpotDisplay(state.jackpots);
+        }
+    });
+
+    hubConnection.on('Error', (err) => {
+        console.error('SignalR error:', err);
+    });
+
+    hubConnection.onreconnected(async () => {
+        if (machineId > 0) {
+            try { await hubConnection.invoke('JoinMachine', machineId); } catch (_) {}
+        }
+    });
+
+    try {
+        await hubConnection.start();
+    } catch (e) {
+        console.error('SignalR connection failed:', e);
+    }
+}
+
+function isHubConnected() {
+    if (!hubConnection) return false;
+    if (typeof signalR !== 'undefined' && signalR.HubConnectionState) {
+        return hubConnection.state === signalR.HubConnectionState.Connected;
+    }
+    return hubConnection.state === 'Connected';
+}
+
+async function joinMachine(id) {
+    if (!isHubConnected()) return;
+    try {
+        await hubConnection.invoke('JoinMachine', id);
+        machineJoined = true;
+    } catch (e) {
+        console.error('JoinMachine failed:', e);
+        machineJoined = false;
+    }
+}
+
+async function leaveMachine(id) {
+    if (!isHubConnected()) return;
+    try {
+        await hubConnection.invoke('LeaveMachine', id);
+        machineJoined = false;
+    } catch (_) {}
+}
+
+async function doLogout() {
+    if (machineJoined && machineId > 0) {
+        await leaveMachine(machineId);
+    }
+    if (hubConnection) {
+        try { await hubConnection.stop(); } catch (_) {}
+        hubConnection = null;
+    }
+    machineJoined = false;
+    clearToken();
+    gameState = 'idle';
+    balance = 0;
+    winAmount = 0;
+    roundId = null;
+    $('#game-screen').classList.remove('active');
+    $('#lobby-screen').classList.remove('active');
+    $('#wallet-screen').classList.remove('active');
+    $('#auth-screen').style.display = '';
+    $('#auth-error').textContent = '';
+}
+
 async function addDemoCredits() {
     try {
         await apiCall('POST', '/api/Auth/UpdateCredit', {
@@ -958,6 +1336,215 @@ async function addDemoCredits() {
     } catch (e) {
         console.error('Failed to add credits:', e);
     }
+}
+
+const AVAILABLE_GAMES = [
+    {
+        id: 'lucky5',
+        name: 'LUCKY 5',
+        icon: '/assets/images/lucky5.png',
+        status: 'playable'
+    },
+    {
+        id: 'blackjack',
+        name: 'BLACKJACK',
+        iconText: '&#9824;',
+        status: 'coming-soon'
+    },
+    {
+        id: 'slots',
+        name: 'MEGA SLOTS',
+        iconText: '&#9733;',
+        status: 'coming-soon'
+    },
+    {
+        id: 'roulette',
+        name: 'ROULETTE',
+        iconText: '&#9679;',
+        status: 'coming-soon'
+    }
+];
+
+function updateLobbyBalance() {
+    const fmt = formatNum(balance);
+    const lobbyBal = document.getElementById('lobby-balance');
+    const lobbyWalBal = document.getElementById('lobby-wallet-bal');
+    const walletBal = document.getElementById('wallet-balance');
+    if (lobbyBal) lobbyBal.textContent = fmt;
+    if (lobbyWalBal) lobbyWalBal.textContent = fmt;
+    if (walletBal) walletBal.textContent = fmt;
+}
+
+function updateLobbyUsername() {
+    const el = document.getElementById('lobby-username');
+    if (el) el.textContent = currentUsername.toUpperCase() || 'PLAYER';
+}
+
+function renderGameGrid() {
+    const grid = document.getElementById('lobby-game-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    AVAILABLE_GAMES.forEach(game => {
+        const card = document.createElement('div');
+        card.className = 'game-card' + (game.status !== 'playable' ? ' unavailable' : '');
+
+        const iconDiv = document.createElement('div');
+        iconDiv.className = 'game-card-icon';
+        if (game.icon) {
+            iconDiv.innerHTML = `<img src="${game.icon}" alt="${game.name}">`;
+        } else {
+            iconDiv.innerHTML = game.iconText || '?';
+        }
+
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'game-card-name';
+        nameDiv.textContent = game.name;
+
+        const badge = document.createElement('div');
+        badge.className = 'game-card-badge ' + (game.status === 'playable' ? 'playable' : 'coming-soon');
+        badge.textContent = game.status === 'playable' ? 'PLAY NOW' : 'COMING SOON';
+
+        card.appendChild(iconDiv);
+        card.appendChild(nameDiv);
+        card.appendChild(badge);
+
+        if (game.status === 'playable') {
+            card.addEventListener('click', () => openGame(game.id));
+        }
+
+        grid.appendChild(card);
+    });
+}
+
+function openGame(gameId) {
+    if (gameId === 'lucky5') {
+        $('#lobby-screen').classList.remove('active');
+        $('#wallet-screen').classList.remove('active');
+        $('#game-screen').classList.add('active');
+        initGame();
+    }
+}
+
+function showLobby() {
+    $('#game-screen').classList.remove('active');
+    $('#wallet-screen').classList.remove('active');
+    $('#lobby-screen').classList.add('active');
+    updateLobbyBalance();
+    updateLobbyUsername();
+    renderGameGrid();
+    document.querySelectorAll('.lobby-nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('nav-lobby').classList.add('active');
+}
+
+function showWallet() {
+    $('#lobby-screen').classList.remove('active');
+    $('#game-screen').classList.remove('active');
+    $('#wallet-screen').classList.add('active');
+    updateLobbyBalance();
+    loadWalletHistory();
+    document.querySelectorAll('.lobby-nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('nav-wallet').classList.add('active');
+}
+
+async function loadWalletHistory() {
+    const list = document.getElementById('wallet-history-list');
+    if (!list) return;
+
+    try {
+        const history = await apiCall('GET', '/api/Auth/MemberHistory');
+        if (!history || history.length === 0) {
+            list.innerHTML = '<div class="wallet-history-empty">NO TRANSACTIONS YET</div>';
+            return;
+        }
+
+        const recent = history.slice(0, 50);
+        list.innerHTML = '';
+        recent.forEach(entry => {
+            const row = document.createElement('div');
+            row.className = 'wallet-history-row';
+
+            const info = document.createElement('div');
+            info.className = 'wallet-history-info';
+
+            const typeEl = document.createElement('div');
+            typeEl.className = 'wallet-history-type';
+            typeEl.textContent = formatTransactionType(entry.type);
+
+            const dateEl = document.createElement('div');
+            dateEl.className = 'wallet-history-date';
+            dateEl.textContent = formatTransactionDate(entry.createdUtc);
+
+            info.appendChild(typeEl);
+            info.appendChild(dateEl);
+
+            const amountEl = document.createElement('div');
+            amountEl.className = 'wallet-history-amount ' + (entry.amount >= 0 ? 'positive' : 'negative');
+            amountEl.textContent = (entry.amount >= 0 ? '+' : '') + formatNum(entry.amount);
+
+            row.appendChild(info);
+            row.appendChild(amountEl);
+            list.appendChild(row);
+        });
+    } catch (e) {
+        list.innerHTML = '<div class="wallet-history-empty">FAILED TO LOAD HISTORY</div>';
+    }
+}
+
+function formatTransactionType(type) {
+    const map = {
+        'Bet': 'BET',
+        'Win': 'WIN',
+        'TransferBalance': 'TRANSFER',
+        'MoveWinToBalance': 'WIN COLLECT',
+        'UpdateCredit': 'CREDIT UPDATE',
+        'DoubleUpWin': 'DOUBLE UP WIN',
+        'DoubleUpLoss': 'DOUBLE UP LOSS',
+        'JackpotWin': 'JACKPOT',
+        'Cashout': 'CASHOUT',
+        'TakeHalf': 'TAKE HALF'
+    };
+    return map[type] || type.toUpperCase();
+}
+
+function formatTransactionDate(utcStr) {
+    try {
+        const d = new Date(utcStr);
+        return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch {
+        return utcStr;
+    }
+}
+
+function backToLobbyFromGame() {
+    if (gameState !== 'idle' && gameState !== 'win') {
+        if (!confirm('Leave the game? Any current round may be affected.')) return;
+    }
+    if (machineJoined && machineId > 0) {
+        leaveMachine(machineId);
+    }
+    stopShuffle();
+    hideDuInfo();
+    gameState = 'idle';
+    winAmount = 0;
+    roundId = null;
+    machineJoined = false;
+    $('#game-screen').classList.remove('active');
+    showLobby();
+}
+
+async function enterLobbyAfterLogin(profileData) {
+    balance = profileData.walletBalance;
+    storeUserInfo(profileData.username, profileData.role);
+
+    if (balance <= 0) {
+        await addDemoCredits();
+        const profile = await apiCall('GET', '/api/Auth/GetUserById');
+        balance = profile.walletBalance;
+    }
+
+    $('#auth-screen').style.display = 'none';
+    showLobby();
 }
 
 async function initGame() {
@@ -983,11 +1570,13 @@ async function initGame() {
         updateCredits();
         updateStakeDisplay();
         updatePaytable();
+        updateJackpotSelectedRow();
+        updateBonusHandText();
         showMessage('PLACE YOUR BET');
         gameState = 'idle';
         setButtonStates();
 
-        renderCards([null, null, null, null, null], false);
+        showIdleTitle();
 
         try {
             const machineState = await apiCall('GET', `/api/Game/machine/${machineId}/state`);
@@ -996,15 +1585,28 @@ async function initGame() {
             }
         } catch (e) {}
 
+        await setupSignalR();
+        await joinMachine(machineId);
+
     } catch (e) {
         showMessage('Error: ' + e.message, 'lose');
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    const authBtn = $('#auth-submit');
+    authBtn.disabled = true;
+    authBtn.textContent = 'LOADING...';
+
+    let assetsReady = false;
+    preloadAllAssets().then(() => {
+        assetsReady = true;
+        authBtn.disabled = false;
+        authBtn.textContent = 'LOGIN';
+    });
+
     const authScreen = $('#auth-screen');
     const authError = $('#auth-error');
-    const authBtn = $('#auth-submit');
     const authToggle = $('#auth-toggle');
     let isLogin = true;
 
@@ -1013,12 +1615,16 @@ document.addEventListener('DOMContentLoaded', () => {
         $('#auth-title').textContent = isLogin ? 'LOGIN' : 'SIGN UP';
         authBtn.textContent = isLogin ? 'LOGIN' : 'SIGN UP';
         authToggle.innerHTML = isLogin
-            ? 'No account? <span>Sign Up</span>'
-            : 'Have account? <span>Login</span>';
+            ? '<span class="auth-toggle-label">NO ACCOUNT?</span> <span>SIGN UP</span>'
+            : '<span class="auth-toggle-label">HAVE ACCOUNT?</span> <span>LOGIN</span>';
         authError.textContent = '';
     });
 
     authBtn.addEventListener('click', async () => {
+        if (!assetsReady) {
+            authError.textContent = 'Assets still loading, please wait';
+            return;
+        }
         const username = $('#auth-username').value.trim();
         const password = $('#auth-password').value.trim();
         if (!username || !password) {
@@ -1030,20 +1636,19 @@ document.addEventListener('DOMContentLoaded', () => {
         authBtn.textContent = 'LOADING...';
 
         try {
+            let profileData;
             if (isLogin) {
                 const data = await doLogin(username, password);
-                token = data.tokens.accessToken;
-                balance = data.profile.walletBalance;
+                storeToken(data.tokens.accessToken);
+                profileData = data.profile;
             } else {
                 await doSignup(username, password);
                 await doVerifyOtp(username);
                 const data = await doLogin(username, password);
-                token = data.tokens.accessToken;
-                balance = data.profile.walletBalance;
+                storeToken(data.tokens.accessToken);
+                profileData = data.profile;
             }
-            authScreen.style.display = 'none';
-            $('#game-screen').classList.add('active');
-            await initGame();
+            await enterLobbyAfterLogin(profileData);
         } catch (e) {
             authError.textContent = e.message;
             authBtn.disabled = false;
@@ -1088,4 +1693,83 @@ document.addEventListener('DOMContentLoaded', () => {
             doDoubleUp('Small');
         }
     });
+
+    const menuBtn = $('#btn-menu');
+    const menuPanel = $('#menu-panel');
+    if (menuBtn && menuPanel) {
+        menuBtn.addEventListener('click', () => {
+            if (gameState === 'idle' || gameState === 'win' || gameState === 'doubleup') {
+                menuPanel.style.display = 'flex';
+            }
+        });
+        $('#btn-close-menu').addEventListener('click', () => {
+            menuPanel.style.display = 'none';
+        });
+        $('#btn-logout-menu').addEventListener('click', () => {
+            menuPanel.style.display = 'none';
+            doLogout();
+        });
+        $('#btn-reset-machine').addEventListener('click', async () => {
+            if (!confirm('Reset machine? Your credits will be set back to 200,000 and the machine state will be cleared.')) return;
+            try {
+                await apiCall('POST', `/api/Game/machine/${machineId}/reset`);
+                menuPanel.style.display = 'none';
+                showMessage('MACHINE RESET - RELOADING...', 'win');
+                setTimeout(() => location.reload(), 1000);
+            } catch (e) {
+                showMessage('RESET FAILED: ' + e.message, 'lose');
+            }
+        });
+    }
+
+    window.addEventListener('beforeunload', () => {
+        if (machineJoined && isHubConnected() && machineId > 0) {
+            hubConnection.invoke('LeaveMachine', machineId).catch(() => {});
+        }
+    });
+
+    const gameBackBtn = document.getElementById('game-back-lobby');
+    if (gameBackBtn) {
+        gameBackBtn.addEventListener('click', backToLobbyFromGame);
+    }
+
+    const lobbyLogoutBtn = document.getElementById('lobby-logout-btn');
+    if (lobbyLogoutBtn) {
+        lobbyLogoutBtn.addEventListener('click', doLogout);
+    }
+
+    const lobbyWalletBtn = document.getElementById('lobby-wallet-btn');
+    if (lobbyWalletBtn) {
+        lobbyWalletBtn.addEventListener('click', showWallet);
+    }
+
+    const walletBackBtn = document.getElementById('wallet-back-btn');
+    if (walletBackBtn) {
+        walletBackBtn.addEventListener('click', showLobby);
+    }
+
+    const navLobby = document.getElementById('nav-lobby');
+    const navWallet = document.getElementById('nav-wallet');
+    if (navLobby) navLobby.addEventListener('click', showLobby);
+    if (navWallet) navWallet.addEventListener('click', showWallet);
+
+    if (token) {
+        authScreen.style.display = 'none';
+        (async () => {
+            try {
+                const profile = await apiCall('GET', '/api/Auth/GetUserById');
+                balance = profile.walletBalance;
+                storeUserInfo(profile.username, profile.role);
+                if (balance <= 0) {
+                    await addDemoCredits();
+                    const updated = await apiCall('GET', '/api/Auth/GetUserById');
+                    balance = updated.walletBalance;
+                }
+                showLobby();
+            } catch (e) {
+                clearToken();
+                authScreen.style.display = '';
+            }
+        })();
+    }
 });

@@ -1,0 +1,13 @@
+{
+  "appId": "com.lucky5.videopoker",
+  "appName": "Lucky5",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https",
+    "allowNavigation": []
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#000000"
+  }
+}

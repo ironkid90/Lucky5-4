@@ -18,9 +18,13 @@ public sealed class BearerTokenMiddleware(RequestDelegate next)
             accessToken = queryToken.ToString();
         }
 
-        if (!string.IsNullOrWhiteSpace(accessToken) && tokenService.TryValidate(accessToken, out var userId))
+        if (!string.IsNullOrWhiteSpace(accessToken) && tokenService.TryValidate(accessToken, out var userId, out var role))
         {
-            var claims = new[] { new Claim(ClaimTypes.NameIdentifier, userId.ToString()) };
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                new Claim(ClaimTypes.Role, role)
+            };
             context.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "Lucky5Bearer"));
             context.Items["access_token"] = accessToken;
         }

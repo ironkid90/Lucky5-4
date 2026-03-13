@@ -16,18 +16,19 @@ public sealed class SimpleTokenService : ITokenService
         _secret = Encoding.UTF8.GetBytes(raw);
     }
 
-    public string IssueToken(Guid userId, TimeSpan lifetime)
+    public string IssueToken(Guid userId, TimeSpan lifetime, string role = "player")
     {
         var expires = DateTimeOffset.UtcNow.Add(lifetime).ToUnixTimeSeconds();
-        var payload = $"{userId:N}.{expires}";
+        var payload = $"{userId:N}.{expires}.{role}";
         using var hmac = new HMACSHA256(_secret);
         var signature = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(payload)));
         return Convert.ToBase64String(Encoding.UTF8.GetBytes($"{payload}.{signature}"));
     }
 
-    public bool TryValidate(string token, out Guid userId)
+    public bool TryValidate(string token, out Guid userId, out string role)
     {
         userId = Guid.Empty;
+        role = "player";
         if (string.IsNullOrWhiteSpace(token) || _revoked.Contains(token))
         {
             return false;
@@ -36,8 +37,8 @@ public sealed class SimpleTokenService : ITokenService
         try
         {
             var decoded = Encoding.UTF8.GetString(Convert.FromBase64String(token));
-            var parts = decoded.Split('.', 3);
-            if (parts.Length != 3 || !Guid.TryParseExact(parts[0], "N", out userId))
+            var parts = decoded.Split('.', 4);
+            if (parts.Length < 3 || !Guid.TryParseExact(parts[0], "N", out userId))
             {
                 return false;
             }
@@ -47,10 +48,31 @@ public sealed class SimpleTokenService : ITokenService
                 return false;
             }
 
-            var payload = $"{parts[0]}.{parts[1]}";
+            string payloadRole;
+            string signature;
+            string payload;
+            if (parts.Length == 4)
+            {
+                payloadRole = parts[2];
+                signature = parts[3];
+                payload = $"{parts[0]}.{parts[1]}.{payloadRole}";
+            }
+            else
+            {
+                payloadRole = "player";
+                signature = parts[2];
+                payload = $"{parts[0]}.{parts[1]}";
+            }
+
             using var hmac = new HMACSHA256(_secret);
             var expected = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(payload)));
-            return CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(expected), Encoding.UTF8.GetBytes(parts[2]));
+            if (!CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(expected), Encoding.UTF8.GetBytes(signature)))
+            {
+                return false;
+            }
+
+            role = payloadRole;
+            return true;
         }
         catch
         {
