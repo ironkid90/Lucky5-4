@@ -250,9 +250,6 @@ input {
   letter-spacing: 0.04em;
 }
 
-.status-grid .status-chip.ledger:nth-child(2) strong {
-  color: var(--amber-hot);
-}
 .machine-title {
   font-size: 0.68rem;
   color: #fff1c1;
@@ -388,15 +385,11 @@ input {
 .hold-row {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
   margin-bottom: 6px;
+  padding: 0 2px;
 }
 
-@media (max-width: 560px) {
-  .hold-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
 .deal-banner {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
